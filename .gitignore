@@ -214,3 +214,6 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+.idea/*.xml
+.idea/fileColors.xml
+.idea/workspace.xml
