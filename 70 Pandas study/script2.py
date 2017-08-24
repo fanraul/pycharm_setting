@@ -1,11 +1,15 @@
 from importlib import reload
 
-import script1
+from script1 import a
 
 import script1
+
+print(dir(script1))
 
 print('-------------')
+print(a)
+print(script1.b)
 
 
-reload(script1)
+#reload(script1)
 
