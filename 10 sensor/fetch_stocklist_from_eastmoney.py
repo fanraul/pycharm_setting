@@ -47,8 +47,8 @@ def fetch2DB():
         stock_temp_info = stock_line.string
         stock_info = stock_temp_info.split('(')
         if stock_info:
-            stock_id = stock_info[1][:-1]
-            stock_name = stock_info[0]
+            stock_id = stock_info[1][:-1].strip()
+            stock_name = stock_info[0].strip()
             ls_stock.append((timestamp,seq_no,stock_id,stock_name))
         seq_no+=1
 
