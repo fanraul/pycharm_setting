@@ -7,6 +7,7 @@ from DBconnectionmanager import Dbconnectionmanager as dcm
 from bs4 import BeautifulSoup
 import urllib.request
 import weblinkmanager
+from generalconstants import logprint
 
 #TODO: 1.add error handling and log output
 #TODO: 2.目前只处理A股数据,以后是否要增加处理B股或其他基金,国债回购编码
@@ -94,8 +95,11 @@ def fetch2DB():
             continue
 
         if (market_id + stock_id) not in dt_stocks_existed.keys():
+            logprint('new stock id added', stock_id,stock_name)
             ls_insert_stocks.append((market_id, stock_id, stock_name, timestamp, 'fetch_stocklist_from_eastmoney'))
         elif stock_name != dt_stocks_existed[market_id + stock_id]:
+            logprint("stock id %s's name changed from %s to %s" %(stock_id,
+                                                                  dt_stocks_existed[market_id + stock_id],stock_name))
             ls_update_stocks.append((stock_name, timestamp, 'fetch_stocklist_from_eastmoney', market_id, stock_id))
     if ls_insert_stocks:
         ins_str = "INSERT INTO stock_basic_info (Market_ID,Stock_ID,Stock_Name,Created_datetime,Created_by) VALUES (?,?,?,?,?)"
