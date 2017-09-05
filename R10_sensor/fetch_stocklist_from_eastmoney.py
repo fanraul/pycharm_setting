@@ -1,13 +1,16 @@
 import pandas as pd
-import numpy as np
-import re
-from datetime import datetime
 from pandas import Series, DataFrame
-from DBconnectionmanager import Dbconnectionmanager as dcm
+import numpy as np
+
 from bs4 import BeautifulSoup
 import urllib.request
-import weblinkmanager
-from generalconstants import logprint
+import re
+
+from datetime import datetime
+
+from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
+import R50_general.weblinkmanager as weblinkmanager
+from R50_general.generalconstants import logprint
 
 #TODO: 1.add error handling and log output
 #TODO: 2.目前只处理A股数据,以后是否要增加处理B股或其他基金,国债回购编码
