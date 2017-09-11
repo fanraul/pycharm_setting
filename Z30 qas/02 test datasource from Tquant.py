@@ -35,3 +35,11 @@ df_shstocklist.to_excel('深圳股票清单.xls')
 
 df_indexlist = mt.get_index()
 df_indexlist.to_excel('沪深指数列表.xls')
+
+mt.get_dce().to_excel('dce.xls')
+mt.get_czce().to_excel('czce.xls')
+mt.get_shfe().to_excel('shfe.xls')
+mt.get_cffex().to_excel('cffex.xls')
+mt.get_etf().to_excel('etf.xls')
+mt.get_fund().to_excel('fund.xls')
+mt.get_index().to_excel('index.xls')

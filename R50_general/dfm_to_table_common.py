@@ -19,16 +19,15 @@ def get_cn_stocklist(stock :str ="") -> DataFrame:
     :return: dataframe of SH and SZ stocks
     """
     if stock == "":
-        dfm_stocks = pd.read_sql_query('''select [Stock_ID] from stock_basic_info 
-                                            where (Market_ID = 'SH' or Market_ID = 'SZ') 
-                                            and (Stock_ID like '0%' or Stock_ID like '3%' or Stock_ID like '6%')    
+        dfm_stocks = pd.read_sql_query('''select * from stock_basic_info 
+                                            where (Market_ID = 'SH' and Stock_ID like '6%') 
+                                            or (Market_ID = 'SZ' and (Stock_ID like '0%' or Stock_ID like '3%' ))    
                                                 '''
                                    , conn)
        # print(dfm_stocks)
     else:
-        dfm_stocks = pd.read_sql_query('''select [Stock_ID] from stock_basic_info 
-                                                where (Market_ID = 'SH' or Market_ID = 'SZ') 
-                                                and (Stock_ID like '0%' or Stock_ID like '3%' or Stock_ID like '6%')
+        dfm_stocks = pd.read_sql_query('''select * from stock_basic_info 
+                                                where  (Market_ID = 'SH or Market_ID = 'SZ')  
                                                     ''' + "and Stock_ID = '%s'" %stock
                                        , conn)
     return dfm_stocks
