@@ -76,7 +76,7 @@ def dfm_col_type_conversion(dfm:DataFrame,index='',columns= {}, dateformat='%Y-%
         if col in dfm.columns:
             new_type = columns[col]
             if new_type == 'datetime':
-                dfm[col] = dfm[col].map(lambda x: datetime.strptime(x,dateformat))
+                dfm[col] = dfm[col].map(lambda x: datetime.strptime(x,dateformat) if x != '--' else pd.NaT)
             elif 'varchar' in columns[col] or 'str' == columns[col]:
                 dfm[col] = dfm[col].astype('str')
             elif 'int' in columns[col]:

@@ -19,14 +19,16 @@ def get_cn_stocklist(stock :str ="") -> DataFrame:
     """
     if stock == "":
         dfm_stocks = pd.read_sql_query('''select * from stock_basic_info 
-                                            where (Market_ID = 'SH' and Stock_ID like '6%') 
-                                            or (Market_ID = 'SZ' and (Stock_ID like '0%' or Stock_ID like '3%' ))    
+                                            where ((Market_ID = 'SH' and Stock_ID like '6%') 
+                                            or (Market_ID = 'SZ' and (Stock_ID like '0%' or Stock_ID like '3%' )))
+                                            and sec_type = '1'
                                                 '''
                                    , conn)
        # print(dfm_stocks)
     else:
         dfm_stocks = pd.read_sql_query('''select * from stock_basic_info 
                                                 where  (Market_ID = 'SH' or Market_ID = 'SZ')  
+                                                and sec_type = '1'
                                                     ''' + "and Stock_ID = '%s'" %stock
                                        , conn)
     return dfm_stocks
@@ -233,9 +235,16 @@ def load_snapshot_dfm_to_db(dfm_log:DataFrame,table_name,mode:str = 'del&recreat
     ins_str_pars = ','.join('?' * len(ls_colnames_dbinsert))
     ls_ins_pars = []
     for i in range(len(dfm_log)):
-        ls_ins_pars.append(tuple(dfm_log.iloc[i]))
+        ls_par=[]
+        for par in dfm_log.iloc[i]:
+            if not pd.isnull(par):
+                ls_par.append(par)
+            else:
+                ls_par.append(None)
+        ls_ins_pars.append(ls_par)
     ins_str = "INSERT INTO %s (%s) VALUES (%s)" %(table_name,ins_str_cols,ins_str_pars)
-    conn.execute(ins_str,ls_ins_pars)
+    for ins_par in ls_ins_pars:
+        conn.execute(ins_str,ins_par)
 
 
 def special_process_col_name(tempstr:str):
@@ -265,4 +274,7 @@ if __name__ == "__main__":
     # dict_misc_pars['created_by'] = 'fetch_stock_3fin_report_from_tquant'
     # dict_misc_pars['char_usage'] = 'FIN10'
     # add_new_chars_and_cols({'test1':'decimal(18,2)','test2':'decimal(18,2)'},[],'stock_fin_balance_1',dict_misc_pars)
+#    conn.execute('INSERT INTO YY_stock_changes_qq ([公布前内容],[公布后内容],[公布日期],[变动日期],[变动项目],[Stock_ID],
+    # [Market_ID],[Update_time]) VALUES (?,?,?,?,?,?,?,?)', ('北京中天信会计师事务所', '四川华信(集团)会计师事务所',
+    # '2002-01-12 00:00:00', None, '境内会计师事务所', '000155', 'SZ', '2017-09-12 21:13:12'))
     pass
