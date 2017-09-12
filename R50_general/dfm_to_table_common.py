@@ -1,10 +1,9 @@
 from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
-from R50_general.generalconstants import logprint
+from R50_general.general_constants_funcs import logprint
 import pandas as pd
 from pandas import Series, DataFrame
 import numpy as np
-from datetime import datetime
-import R50_general.generalconstants as gc
+import R50_general.general_constants_funcs as gc
 from datetime import datetime
 
 
@@ -27,10 +26,28 @@ def get_cn_stocklist(stock :str ="") -> DataFrame:
        # print(dfm_stocks)
     else:
         dfm_stocks = pd.read_sql_query('''select * from stock_basic_info 
-                                                where  (Market_ID = 'SH or Market_ID = 'SZ')  
+                                                where  (Market_ID = 'SH' or Market_ID = 'SZ')  
                                                     ''' + "and Stock_ID = '%s'" %stock
                                        , conn)
     return dfm_stocks
+
+def get_all_stocklist(stock :str ="") -> DataFrame:
+    """
+    获得所有stocklist中的stock清单,不单单是股票
+    :return: dataframe of SH and SZ stocks
+    """
+    if stock == "":
+        dfm_stocks = pd.read_sql_query('''select * from stock_basic_info   
+                                                '''
+                                   , conn)
+       # print(dfm_stocks)
+    else:
+        dfm_stocks = pd.read_sql_query('''select * from stock_basic_info 
+                                                where   
+                                                    ''' + "and Stock_ID = '%s'" %stock
+                                       , conn)
+    return dfm_stocks
+
 
 def get_chars(origin = '',usages = [],freq='D',charids=[]) ->DataFrame:
     """
@@ -205,6 +222,22 @@ def load_dfm_to_db_by_mkt_stk_wo_hist():
     pass
 #    3) 'wo_hist': dfm包含当日数据,无需考虑db中的历史数据,直接insert即可.
 
+
+def load_snapshot_dfm_to_db(dfm_log:DataFrame,table_name,mode:str = 'del&recreate'):
+    dfm_log['Update_time'] = datetime.now()
+    if mode == 'del&recreate':
+        conn.execute('DELETE FROM %s' %table_name)
+
+    ls_colnames_dbinsert = list(map(special_process_col_name, dfm_log.columns))
+    ins_str_cols = ','.join(ls_colnames_dbinsert)
+    ins_str_pars = ','.join('?' * len(ls_colnames_dbinsert))
+    ls_ins_pars = []
+    for i in range(len(dfm_log)):
+        ls_ins_pars.append(tuple(dfm_log.iloc[i]))
+    ins_str = "INSERT INTO %s (%s) VALUES (%s)" %(table_name,ins_str_cols,ins_str_pars)
+    conn.execute(ins_str,ls_ins_pars)
+
+
 def special_process_col_name(tempstr:str):
     """
     due to col name in db has some restriction, need to reprocess dfm columns name to make it align with DB's column name
@@ -225,10 +258,11 @@ if __name__ == "__main__":
     # print(get_cn_stocklist())
     # print(get_chars('Tquant',['FIN10','FIN20','FIN30']))
     # create_table_by_stock_date_template('hello123')
-    dict_misc_pars = {}
-    dict_misc_pars['char_origin'] = 'Tquant'
-    dict_misc_pars['char_freq'] = "D"
-    dict_misc_pars['allow_multiple'] ='N'
-    dict_misc_pars['created_by'] = 'fetch_stock_3fin_report_from_tquant'
-    dict_misc_pars['char_usage'] = 'FIN10'
-    add_new_chars_and_cols({'test1':'decimal(18,2)','test2':'decimal(18,2)'},[],'stock_fin_balance_1',dict_misc_pars)
+    # dict_misc_pars = {}
+    # dict_misc_pars['char_origin'] = 'Tquant'
+    # dict_misc_pars['char_freq'] = "D"
+    # dict_misc_pars['allow_multiple'] ='N'
+    # dict_misc_pars['created_by'] = 'fetch_stock_3fin_report_from_tquant'
+    # dict_misc_pars['char_usage'] = 'FIN10'
+    # add_new_chars_and_cols({'test1':'decimal(18,2)','test2':'decimal(18,2)'},[],'stock_fin_balance_1',dict_misc_pars)
+    pass

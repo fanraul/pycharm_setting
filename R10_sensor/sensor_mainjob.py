@@ -1,7 +1,7 @@
-import R10_sensor.fetch_stocklist_from_eastmoney as fetch_stocklist
-import R10_sensor.fetch_stock_3fin_report_from_tquant as fetch_financials
-
 from datetime import datetime as dt
+
+import R10_sensor.fetch_stock_fin_reports_from_tquant as fetch_financials
+import R10_sensor.fetch_stocklist_from_Tquant as fetch_stocklist
 
 fetch_stocklist.fetch2DB()
 

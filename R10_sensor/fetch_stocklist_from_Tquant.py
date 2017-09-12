@@ -10,7 +10,7 @@ from datetime import datetime
 
 from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
 import R50_general.weblinkmanager as weblinkmanager
-from R50_general.generalconstants import logprint
+from R50_general.general_constants_funcs import logprint
 import tquant.getdata as gt
 import tquant.myquant as mt
 import R50_general.dfm_to_table_common as df2db
@@ -30,7 +30,7 @@ def fetch2DB():
     dcm_sql = dcm()
     conn = dcm_sql.getconn()
 
-    dfm_db_stocks = df2db.get_cn_stocklist()
+    dfm_db_stocks = df2db.get_all_stocklist()
 #    print(dfm_db_stocks)
     dfm_db_stocks['symbol'] = dfm_db_stocks['Market_ID'] + dfm_db_stocks['Stock_ID']
 
@@ -59,12 +59,12 @@ def fetch2DB():
             # update
             ls_upt_pars.append((stock_name,sec_type,is_active,timestamp,
                                      'fetch_stocklist_from_Tquant',margin_ratio,multiplier,price_tick,market_id,stock_id))
-            logprint("insert stock: %s.%s" %(market_id,stock_id))
+            logprint("update stock: %s.%s" %(market_id,stock_id))
         else:
             # insert
             ls_ins_pars.append((market_id,stock_id,stock_name,sec_type,is_active,timestamp,
                                      'fetch_stocklist_from_Tquant',margin_ratio,multiplier,price_tick))
-            logprint("update stock: %s.%s" %(market_id,stock_id))
+            logprint("insert stock: %s.%s" %(market_id,stock_id))
 
     if ls_ins_pars:
         ins_str = """INSERT INTO stock_basic_info ([Market_ID]

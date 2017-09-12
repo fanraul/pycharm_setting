@@ -10,7 +10,7 @@ from datetime import datetime
 
 from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
 import R50_general.weblinkmanager as weblinkmanager
-from R50_general.generalconstants import logprint
+from R50_general.general_constants_funcs import logprint
 
 #TODO: 1.add error handling and log output
 #TODO: 2.目前只处理A股数据,以后是否要增加处理B股或其他基金,国债回购编码
