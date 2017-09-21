@@ -1,12 +1,16 @@
 import pandas as pd
-import numpy as np
-import re
-from datetime import datetime
 from pandas import Series, DataFrame
-from DBconnectionmanager import Dbconnectionmanager as dcm
+import numpy as np
+
 from bs4 import BeautifulSoup
 import urllib.request
-import weblinkmanager
+import re
+
+from datetime import datetime
+
+from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
+import R50_general.weblinkmanager as weblinkmanager
+from R50_general.general_constants_funcs import logprint
 
 #TODO: 1.add error handling and log output
 #TODO: 2.目前只处理A股数据,以后是否要增加处理B股或其他基金,国债回购编码
@@ -47,8 +51,8 @@ def fetch2DB():
         stock_temp_info = stock_line.string
         stock_info = stock_temp_info.split('(')
         if stock_info:
-            stock_id = stock_info[1][:-1]
-            stock_name = stock_info[0]
+            stock_id = stock_info[1][:-1].strip()
+            stock_name = stock_info[0].strip()
             ls_stock.append((timestamp,seq_no,stock_id,stock_name))
         seq_no+=1
 
@@ -94,8 +98,11 @@ def fetch2DB():
             continue
 
         if (market_id + stock_id) not in dt_stocks_existed.keys():
+            logprint('new stock id added', stock_id,stock_name)
             ls_insert_stocks.append((market_id, stock_id, stock_name, timestamp, 'fetch_stocklist_from_eastmoney'))
         elif stock_name != dt_stocks_existed[market_id + stock_id]:
+            logprint("stock id %s's name changed from %s to %s" %(stock_id,
+                                                                  dt_stocks_existed[market_id + stock_id],stock_name))
             ls_update_stocks.append((stock_name, timestamp, 'fetch_stocklist_from_eastmoney', market_id, stock_id))
     if ls_insert_stocks:
         ins_str = "INSERT INTO stock_basic_info (Market_ID,Stock_ID,Stock_Name,Created_datetime,Created_by) VALUES (?,?,?,?,?)"
