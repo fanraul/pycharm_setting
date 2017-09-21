@@ -9,7 +9,8 @@ log = True
 
 weblinks = {
     'stock_list_easymoney': 'http://quote.eastmoney.com/stocklist.html',   # obselete
-    'stock_change_record_qq': 'http://stock.finance.qq.com/corp1/profile.php?zqdm=%(stock_id)s'
+    'stock_change_record_qq': 'http://stock.finance.qq.com/corp1/profile.php?zqdm=%(stock_id)s',
+    'stock_category_qq': 'http://stockapp.finance.qq.com/mstats/?mod=all'
 }
 
 #table created by program dfm2table has prefix DD!
