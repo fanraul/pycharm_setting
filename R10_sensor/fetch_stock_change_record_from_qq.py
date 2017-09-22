@@ -13,6 +13,16 @@ import R50_general.general_constants_funcs as gcf
 from R50_general.general_constants_funcs import logprint
 import R50_general.dfm_to_table_common as df2db
 
+"""
+this program parse the stock basic infro page from qq :
+http://stock.finance.qq.com/corp1/profile.php?zqdm=%(stock_id)s
+
+
+it extract below 3 types datas 
+
+"""
+
+
 def fetch2DB(mode:str = ''):
     """
     fetch stock name history and update into DB

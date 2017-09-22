@@ -16,7 +16,9 @@ weblinks = {
 #table created by program dfm2table has prefix DD!
 dbtables = {
     'finpreports_Tquant' :['DD_stock_fin_balance_tquant', 'DD_stock_fin_profit_tquant','DD_stock_fin_cashflow_tquant'],
-    'name_hist_qq': 'DD_stock_name_change_hist_qq'
+    'name_hist_qq': 'DD_stock_name_change_hist_qq',
+    'fixed_basic_info_tquant': 'DD_stock_fixed_basic_info_tquant',
+    'basic_info1_tquant': 'DD_stock_basic_info1_tquant'
 }
 
 dbtemplate_stock_date = """
@@ -33,6 +35,21 @@ CREATE TABLE [%(table)s](
 	[Market_ID] ASC,
 	[Stock_ID] ASC,
 	[Trans_Datetime] ASC
+))
+"""
+
+dbtemplate_stock_wo_date = """
+CREATE TABLE [%(table)s](
+	[Market_ID] [nvarchar](50) NOT NULL,
+	[Stock_ID] [nvarchar](50) NOT NULL,
+	[Created_datetime] [datetime] NULL,
+	[Created_by] [nvarchar](50) NULL,
+	[Last_modified_datetime] [datetime] NULL,
+	[Last_modified_by] [nvarchar](50) NULL,
+ CONSTRAINT [PK_%(table)s] PRIMARY KEY 
+(
+	[Market_ID] ASC,
+	[Stock_ID] ASC
 ))
 """
 
