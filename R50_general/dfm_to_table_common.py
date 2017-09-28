@@ -3,9 +3,8 @@ from R50_general.general_constants_funcs import logprint
 import pandas as pd
 from pandas import Series, DataFrame
 import numpy as np
-import R50_general.general_constants_funcs as gc
+import R50_general.general_constants_funcs as gcf
 from datetime import datetime
-
 
 #initial steps:
 # step1: get DB connection
@@ -85,11 +84,13 @@ def create_table_by_template(table_name:str,table_type:str):
                                         conn)
     if len(dfm_table_check) == 0:
         if table_type == 'stock_date':
-            crt_str = gc.dbtemplate_stock_date %{'table':table_name.strip()}
+            crt_str = gcf.dbtemplate_stock_date %{'table':table_name.strip()}
         elif table_type == 'stock_date_multi_value':
-            crt_str = gc.dbtemplate_stock_date_multi_value %{'table':table_name.strip()}
+            crt_str = gcf.dbtemplate_stock_date_multi_value %{'table':table_name.strip()}
         elif table_type == 'stock_wo_date':
-            crt_str = gc.dbtemplate_stock_wo_date %{'table':table_name.strip()}
+            crt_str = gcf.dbtemplate_stock_wo_date %{'table':table_name.strip()}
+        elif table_type == 'catg_date':
+            crt_str = gcf.dbtemplate_catg_date % {'table': table_name.strip()}
         else:
             raise
         conn.execute(crt_str)
@@ -255,6 +256,8 @@ def load_dfm_to_db_multi_value_by_mkt_stk_cur(market_id,item,dfm_data:DataFrame,
     # print(dfm_db_data)
     if pd.Timestamp(cur_datetime) in dfm_db_data.index:
         # entry already exist in table, since it is current date db insert, no need to update history data already exist
+        # TODO: may add logic to allow multiple update per day
+        logprint('Table %s no need to update since only one update per day' %table_name)
         return
 
     if process_mode == 'w_check' and len(dfm_db_data) > 0:
@@ -298,6 +301,7 @@ def load_dfm_to_db_multi_value_by_mkt_stk_cur(market_id,item,dfm_data:DataFrame,
             conn.execute(ins_str, ls_ins_pars)
         except:
             raise
+
 
 
 def dfm_value_to_set(dfm_data:DataFrame,cols:list) -> set:
@@ -378,6 +382,78 @@ def get_stock_catg(origin:str) -> DataFrame:
                                                 where Catg_Origin = '%s' ''' %origin
                                        , conn)
     return dfm_catg
+
+def load_dfm_to_db_cur(dfm_cur_data:DataFrame,key_cols:list,table_name:str,dict_misc_pars:dict,processing_mode:str='w_update'):
+    """
+    本函数用于单值属性的char的当前数据更新.
+    导入的dfm中的数据到table中,processing_mode决定了处理方式:
+    1) 'w_update: key_cols存在时, 进行update
+    2) "wo_update: key_cols存在时,不进行update
+
+    传入的dataframe中无需包含Trans_Datetime,Created_datetime,Created_by,Last_modified_datetime,Last_modified_by这四列.
+    Trans_Datetime默认取当前日期.
+    :param dfm:
+    :param table_name:
+    :param dict_misc_pars:
+    :processing_mode:
+    :return:
+    """
+    # load DB contents
+    timestamp = datetime.now()
+    today = datetime.strptime(str(timestamp.date()),'%Y-%m-%d')
+    dfm_db_data = pd.read_sql_query("select * from %s where Trans_Datetime = ?" %table_name
+                                        , conn, params=(today,))
+    dfm_cur_data['Trans_Datetime'] = today
+    dfm_insert_data = gcf.dfm_A_minus_B(dfm_cur_data,dfm_db_data,key_cols)
+    dfm_update_data = gcf.dfm_A_intersect_B(dfm_cur_data,dfm_db_data,key_cols)
+
+    # gcf.dfmprint(dfm_insert_data)
+    if len(dfm_insert_data) > 0:
+        ins_str_cols = ''
+        ins_str_pars = ''
+        ls_ins_pars = []
+        for index,row in dfm_insert_data.iterrows():
+            # insert logic
+            logprint('Insert table %s new Record %s at Period %s' % (table_name, [row[col] for col in key_cols] , today))
+            # rename the df with new cols name,use rename function with a dict of old column to new column mapping
+            ls_colnames_dbinsert = list(map(special_process_col_name,dfm_insert_data.columns))
+            ins_str_cols = ','.join(ls_colnames_dbinsert)
+            ins_str_pars = ','.join('?' * len(ls_colnames_dbinsert))
+            #        print(ins_str_cols)
+            #        print(ins_str_pars)
+            # convert into datetime type so that it can update into SQL server
+            # trans_datetime = datetime.strptime(str(ts_id.date()), '%Y-%m-%d')
+            # trans_datetime = ts_id.to_pydatetime()
+            ls_ins_pars.append((timestamp, dict_misc_pars['created_by'])
+                               + tuple(row))
+        if ins_str_cols:
+            ins_str = '''INSERT INTO %s (Created_datetime,Created_by,%s) VALUES (?,?,%s)''' % (
+                table_name,ins_str_cols, ins_str_pars)
+            # print(ins_str)
+            try:
+                conn.execute(ins_str, ls_ins_pars)
+            except:
+                raise
+
+    if len(dfm_update_data) >0 and processing_mode == 'w_update':
+        # update logic: update the entry
+        ls_upt_cols = []
+        ls_upt_pars = []
+        for index,row in dfm_update_data.iterrows():
+            logprint('Update table %s Record %s at Period %s' % (table_name, [row[col] for col in key_cols], today))
+            # rename the df with new cols name,use rename function with a dict of old column to new column mapping
+            ls_colnames_dbupdate = list(map(special_process_col_name,dfm_update_data.columns))
+            upt_str_cols = '=?,'.join(ls_colnames_dbupdate) +'=?'+ ", Last_modified_datetime = ?,Last_modified_by=?"
+            upt_str_keycols = '=? AND '.join(key_cols) +'=?'
+            ls_upt_pars.append(tuple(row) + (timestamp, dict_misc_pars['update_by']) +
+                               tuple([row[col] for col in key_cols]))
+
+        if ls_upt_pars:
+            update_str = '''UPDATE %s SET %s 
+                WHERE %s ''' % (table_name, upt_str_cols,upt_str_keycols)
+            conn.execute(update_str, tuple(ls_upt_pars))
+
+
 
 if __name__ == "__main__":
     # print(get_cn_stocklist())

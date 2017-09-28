@@ -95,7 +95,7 @@ def fetch2DB():
 
     #func2: fetch stock category info
     dt_stk_catgs = parse_stock_under_catg(dfm_cur_catg)
-    print(dt_stk_catgs)
+    # print(dt_stk_catgs)
 
     #get stock list:
     dfm_cn_stocks = df2db.get_cn_stocklist()
@@ -115,7 +115,33 @@ def fetch2DB():
             logprint("Stock %s doesn't have category assigned" %(row['Stock_ID']+':'+ row['Stock_Name']))
 
     # 2.3 insert category daily detail into DB
+    # create DB table and chars
+    table_name_catg_trans = gcf.dbtables['category_daily_trans_qq']
+    df2db.create_table_by_template(table_name_catg_trans,table_type='catg_date')
+    # get chars for stock category trans
+    dfm_db_chars_catgtrans = df2db.get_chars('QQ', ['CATG_TRANS'])
+    dict_misc_pars_catgtrans = {}
+    dict_misc_pars_catgtrans['char_origin'] = 'QQ'
+    dict_misc_pars_catgtrans['char_freq'] = "D"
+    dict_misc_pars_catgtrans['allow_multiple'] ='N'
+    dict_misc_pars_catgtrans['created_by'] = dict_misc_pars_catgtrans['update_by'] ='fetch_stock_category_and_daily_status_from_qq'
+    dict_misc_pars_catgtrans['char_usage'] = 'CATG_TRANS'
+    dict_cols_cur_catgtrans = {'上涨家数': 'int',
+                               '平盘家数':'int',
+                               '下跌家数':'int',
+                               '总家数':'int',
+                               '平均价格':'decimal(14, 4)',
+                               '涨跌额':'decimal(14, 4)',
+                               '涨跌幅':'decimal(8,6)',
+                               '总成交手数': 'decimal(18, 2)',
+                               '总成交额万元':'decimal(20,2)',
+                                 }
 
+    df2db.add_new_chars_and_cols(dict_cols_cur_catgtrans, list(dfm_db_chars_catgtrans['Char_ID']), table_name_catg_trans,
+                                 dict_misc_pars_catgtrans)
+    # insert into db
+    df2db.load_dfm_to_db_cur(dfm_catgs_daily_trans,['Catg_Type','Catg_Name','Trans_Datetime'],table_name_catg_trans,
+                             dict_misc_pars_catgtrans)
 
 def parse_stock_under_catg(dfm_catgs:DataFrame) ->dict:
     """
@@ -132,7 +158,7 @@ def parse_stock_under_catg(dfm_catgs:DataFrame) ->dict:
         if list_data:
             ls_stk = list_data[0].split(',')
             ls_stk = [stk.strip().upper() for stk in ls_stk]
-            print(ls_stk)
+            # print(ls_stk)
             for stkcode in ls_stk:
                 ls_catgs = dt_stkcatgs.get(stkcode, [])
                 # print(ls_catgs)
@@ -176,17 +202,18 @@ def parse_concept(str_catgs):
             ls_dfm_catg.append(dt_line)
 
             dt_catg_daily_trans ={}
-            dt_catg_daily_trans['Catg_Origin']  =  'QQ'
+            # dt_catg_daily_trans['Catg_Origin']  =  'QQ'
             dt_catg_daily_trans['Catg_Type']    = dt_type[ls_item[0][:2]]
             dt_catg_daily_trans['Catg_Name']    = ls_item[1].strip()
-            dt_catg_daily_trans['上涨家数']      = ls_item[2]
-            dt_catg_daily_trans['平盘家数']      = ls_item[3]
-            dt_catg_daily_trans['下跌家数']      = ls_item[4]
-            dt_catg_daily_trans['总家数']        = ls_item[5]
-            dt_catg_daily_trans['平均价格']      = ls_item[6]
-            dt_catg_daily_trans['涨跌幅']        = ls_item[7]
-            dt_catg_daily_trans['总成交手数']    = ls_item[8]
-            dt_catg_daily_trans['总成交额万元']  = ls_item[9]
+            dt_catg_daily_trans['上涨家数']      = int(ls_item[2])
+            dt_catg_daily_trans['平盘家数']      = int(ls_item[3])
+            dt_catg_daily_trans['下跌家数']      = int(ls_item[4])
+            dt_catg_daily_trans['总家数']        = int(ls_item[5])
+            dt_catg_daily_trans['平均价格']      = float(ls_item[6])
+            dt_catg_daily_trans['涨跌额']        = float(ls_item[7])
+            dt_catg_daily_trans['涨跌幅']        = float(ls_item[8])/100
+            dt_catg_daily_trans['总成交手数']    = float(ls_item[9])
+            dt_catg_daily_trans['总成交额万元']  = float(ls_item[10])
             ls_dfm_catg_daily_trans.append(dt_catg_daily_trans)
         else:
             raise

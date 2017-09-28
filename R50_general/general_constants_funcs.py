@@ -23,7 +23,8 @@ dbtables = {
     'name_hist_qq': 'DD_stock_name_change_hist_qq',
     'fixed_basic_info_tquant': 'DD_stock_fixed_basic_info_tquant',
     'basic_info1_tquant': 'DD_stock_basic_info1_tquant',
-    'stock_category_relation_qq':'DD_stock_category_assignment_qq'
+    'stock_category_relation_qq':'DD_stock_category_assignment_qq',
+    'category_daily_trans_qq': 'DD_category_daily_noauth_qq'
 }
 
 dbtemplate_stock_date = """
@@ -74,6 +75,23 @@ CREATE TABLE [%(table)s](
 	[Stock_ID] ASC,
 	[Trans_Datetime] ASC,
 	[Sqno] ASC
+))
+"""
+
+dbtemplate_catg_date = """
+CREATE TABLE [%(table)s](
+	[Catg_Type] [nvarchar](50) NOT NULL,
+	[Catg_Name] [nvarchar](50) NOT NULL,
+	[Trans_Datetime] [datetime] NOT NULL,
+	[Created_datetime] [datetime] NULL,
+	[Created_by] [nvarchar](50) NULL,
+	[Last_modified_datetime] [datetime] NULL,
+	[Last_modified_by] [nvarchar](50) NULL,
+ CONSTRAINT [PK_%(table)s] PRIMARY KEY 
+(
+	[Catg_Type] ASC,
+	[Catg_Name] ASC,
+	[Trans_Datetime] ASC
 ))
 """
 
@@ -157,6 +175,23 @@ def dfm_A_minus_B(A:DataFrame,B:DataFrame, key_cols:list)->DataFrame:
     # print(dfm_merge_by_keycols[dfm_merge_by_keycols.duplicated == 'X'])
     # del dfm_merge_by_keycols['duplicated']
 
+def dfm_A_intersect_B(A:DataFrame,B:DataFrame, key_cols:list)->DataFrame:
+    """
+    A - B return the entries which in A and in B based on key cols, it is mainly used to identify duplicate entries and
+    then update to DB
+    :param A:
+    :param B:
+    :return:
+    """
+    if len(B) == 0:
+        return DataFrame(columns=list(A.columns))
+    B_tmp=B[key_cols].copy()
+    B_tmp['tmp_col_duplicated'] = 'Y'
+    dfm_merge_by_keycols = A.merge(B_tmp, how='left', on = key_cols)
+    dfm_merge_by_keycols.dropna(inplace = True)
+    del dfm_merge_by_keycols['tmp_col_duplicated']
+    return dfm_merge_by_keycols
+
 if __name__ == "__main__":
     # print(get_cn_stocklist())
     # print(get_chars('Tquant',['FIN10','FIN20','FIN30']))
@@ -174,19 +209,19 @@ if __name__ == "__main__":
     # print(dfm_temp)
     # print(list(dfm_temp.index))
     # print(type(dfm_temp.iloc[0][0]), type(dfm_temp.iloc[0][1]),type(dfm_temp.iloc[0][2]))
-    # dfm1 = DataFrame([{'A':'A1','B':'B1','C':'C1'},{'A':'A2','B':'B2','C':'C2'},{'A':'A3','B':'B3','C':'C3'},])
-    # dfm2 = DataFrame([{'A':'A1','B':'B1','C':'C1'},{'A':'A2','B':'B4','C':'C4'},{'A':'A3','B':'B3','C':'C5'},])
+    dfm1 = DataFrame([{'A':'A1','B':'B1','C':'C1'},{'A':'A2','B':'B2','C':'C2'},{'A':'A3','B':'B3','C':'C3'},])
+    dfm2 = DataFrame([{'A':'A1','B':'B1','C':'C1'},{'A':'A2','B':'B4','C':'C4'},{'A':'A3','B':'B3','C':'C5'},])
     # # dfm2 = DataFrame(columns = ['A', 'B', 'C', 'D'] )
     # print(dfm1,dfm2,sep='\n')
-    # print(dfm_A_minus_B(dfm1,dfm2,key_cols = ['A','B']))
-    #
+    print(dfm_A_minus_B(dfm1,dfm2,key_cols = ['A','B']))
+    print(dfm_A_intersect_B(dfm1,dfm2,key_cols=['A','B']))
     # dfm3 = DataFrame([{'A':'A1','B':'B1','C':'C1'},{'A':'A2','B':'B2','C':'C2'},{'A':'A3','B':'B3','C':'C3'},],index = ['0','0','1'])
     # print(DataFrame.to_dict(dfm3))
     # print(dfm1.values.tolist(),dfm3.columns)
 
-    dfm4 = DataFrame(
-        [{'A': 'A1', 'B': 'B1', 'C': 'C1'}, {'A': 'A2', 'B': 'B2', 'C': 'C2'}, {'A': 'A3', 'B': 'B3', 'C': 'C3'}, ])
-
-    for index,row in dfm4.iterrows():
-        print(index,type(index))
-        print(row,type(row))
+    # dfm4 = DataFrame(
+    #     [{'A': 'A1', 'B': 'B1', 'C': 'C1'}, {'A': 'A2', 'B': 'B2', 'C': 'C2'}, {'A': 'A3', 'B': 'B3', 'C': 'C3'}, ])
+    #
+    # for index,row in dfm4.iterrows():
+    #     print(index,type(index))
+    #     print(row,type(row))
