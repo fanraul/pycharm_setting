@@ -66,7 +66,7 @@ def fetch2DB_individual(item : str, dfm_db_chars):
         #get db table name for fin report
         trans_table_name = gc.dbtables['finpreports_Tquant'][i]
         #check table exist or not, if not create it by template string
-        df2db.create_table_by_stock_date_template(trans_table_name)
+        df2db.create_table_by_template(trans_table_name,table_type='stock_date')
         dfm_fin=ls_finreports[i]
         dict_misc_pars['char_usage'] = ls_usage[i]
         dict_cols_cur = {x: "decimal(18,6)" for x in dfm_fin.columns}

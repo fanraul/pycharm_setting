@@ -9,7 +9,6 @@ import re
 from datetime import datetime
 
 from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
-import R50_general.weblinkmanager as weblinkmanager
 from R50_general.general_constants_funcs import logprint
 import tquant.getdata as gt
 import tquant.myquant as mt

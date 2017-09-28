@@ -7,9 +7,8 @@ import urllib.request
 import re
 
 from datetime import datetime
-
+import R50_general.general_constants_funcs as gcf
 from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
-import R50_general.weblinkmanager as weblinkmanager
 from R50_general.general_constants_funcs import logprint
 
 #TODO: 1.add error handling and log output
@@ -21,7 +20,7 @@ def fetch2DB():
     timestamp = datetime.now()
 
     #Step1: parsing webpage and produce stock list
-    url_eastmoney_stock_list = weblinkmanager.weblinks['stock_list_easymoney']
+    url_eastmoney_stock_list = gcf.weblinks['stock_list_easymoney']
     req = urllib.request.Request(url_eastmoney_stock_list)
     user_agent = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.82 Safari/537.36'
     req.add_header('User-Agent', user_agent)

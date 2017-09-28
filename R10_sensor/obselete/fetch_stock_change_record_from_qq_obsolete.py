@@ -20,7 +20,7 @@ http://stock.finance.qq.com/corp1/profile.php?zqdm=%(stock_id)s
 
 it extract below 3 types datas 
 -change hist, especially name change log
--stock category info (obsolete,data source quality not good!!)
+-stock category info
 """
 
 
@@ -99,19 +99,19 @@ def fetch2DB(mode:str = ''):
                 ls_changes.append(dfm_item_changes)
                 # print (dfm_item_name_changes )
             # func2: fetch stock category info
-            # dfm_item_catgs = soup_parse_catg(soup_profile)
-            # if type(dfm_item_catgs) != type(None):
-            #     dict_cols_cur_catg = {'所属板块': 'nvarchar(50)'}
-            #     df2db.add_new_chars_and_cols(dict_cols_cur_catg,list(dfm_db_chars_catg['Char_ID']),table_name_concept,
-            #                                  dict_misc_pars_catg)
-            #     market_id = 'SH' if item.startswith('6') else 'SZ'
-            #     for id in range(len(dfm_item_catgs)):
-            #         if not (dfm_item_catgs.iloc[id]['所属板块'],) in set_db_catg:
-            #             logprint("Stock %s Concept %s doesn't exist in table ZFCG_Category" %(item,dfm_item_catgs.iloc[id]['所属板块']))
-            #     df2db.load_dfm_to_db_multi_value_by_mkt_stk_cur(market_id,item,dfm_item_catgs,table_name_concept,
-            #                                                        dict_misc_pars_catg,process_mode = 'w_check')
-            # else:
-            #     logprint("Stock %s can't find category info" %item)
+            dfm_item_catgs = soup_parse_catg(soup_profile)
+            if type(dfm_item_catgs) != type(None):
+                dict_cols_cur_catg = {'所属板块': 'nvarchar(50)'}
+                df2db.add_new_chars_and_cols(dict_cols_cur_catg,list(dfm_db_chars_catg['Char_ID']),table_name_concept,
+                                             dict_misc_pars_catg)
+                market_id = 'SH' if item.startswith('6') else 'SZ'
+                for id in range(len(dfm_item_catgs)):
+                    if not (dfm_item_catgs.iloc[id]['所属板块'],) in set_db_catg:
+                        logprint("Stock %s Concept %s doesn't exist in table ZFCG_Category" %(item,dfm_item_catgs.iloc[id]['所属板块']))
+                df2db.load_dfm_to_db_multi_value_by_mkt_stk_cur(market_id,item,dfm_item_catgs,table_name_concept,
+                                                                   dict_misc_pars_catg,process_mode = 'w_check')
+            else:
+                logprint("Stock %s can't find category info" %item)
 
 
     if ls_changes and mode == 'update_log':

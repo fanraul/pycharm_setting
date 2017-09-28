@@ -80,11 +80,18 @@ def concatenate_sel_str(*args):
     else:
         return ''
 
-def create_table_by_stock_date_template(table_name:str):
+def create_table_by_template(table_name:str,table_type:str):
     dfm_table_check = pd.read_sql_query(" select * from sys.objects where type = 'U' and name = '%s'" % table_name.strip(),
                                         conn)
     if len(dfm_table_check) == 0:
-        crt_str = gc.dbtemplate_stock_date %{'table':table_name.strip()}
+        if table_type == 'stock_date':
+            crt_str = gc.dbtemplate_stock_date %{'table':table_name.strip()}
+        elif table_type == 'stock_date_multi_value':
+            crt_str = gc.dbtemplate_stock_date_multi_value %{'table':table_name.strip()}
+        elif table_type == 'stock_wo_date':
+            crt_str = gc.dbtemplate_stock_wo_date %{'table':table_name.strip()}
+        else:
+            raise
         conn.execute(crt_str)
         logprint('Table %s is created' %table_name)
 
@@ -146,7 +153,9 @@ def add_new_chars_and_cols(dict_cols_cur:dict,ls_cols_db:list,table_name:str,dic
 
 def load_dfm_to_db_by_mkt_stk_w_hist(market_id,item,dfm_data:DataFrame,table_name:str,dict_misc_pars:dict,processing_mode:str):
     """
-    导入的dfm中的数据到table中,processing_mode觉得了处理方式:
+    本函数用于单值属性的char的历史数据更新.
+    本函数只支持单值类型的chars的表更新,如果char是多值的,请用load_dfm_to_db_multi_value_by_mkt_stk_w_hist(尚未开发)
+    导入的dfm中的数据到table中,processing_mode决定了处理方式:
     1) 'w_update: dfm包含历史数据,如不存在,则insert,存在并且数据发生了变化,就update
     2) "wo_update: dfm包含历史数据,如不存在,则insert,但是不做update(效率更高)
     注意:传入的datafram中的index必须是时间.
@@ -158,10 +167,8 @@ def load_dfm_to_db_by_mkt_stk_w_hist(market_id,item,dfm_data:DataFrame,table_nam
     :processing_mode:
     :return:
     """
-    # TODO: handling multiple value char
     # load DB contents
     timestamp = datetime.now()
-
 
     dfm_db_data = pd.read_sql_query("select * from %s where Market_ID = ? and Stock_ID = ?" %table_name
                                         , conn, params=(market_id, item), index_col='Trans_Datetime')
@@ -170,7 +177,7 @@ def load_dfm_to_db_by_mkt_stk_w_hist(market_id,item,dfm_data:DataFrame,table_nam
     ins_str_pars = ''
     ls_ins_pars = []
     for ts_id in dfm_data.index:
-        if  ts_id in dfm_db_data.index:
+        if ts_id in dfm_db_data.index:
             #entry already exist
             if processing_mode == 'w_update':
                 # update logic: only update the value changed cols
@@ -196,6 +203,8 @@ def load_dfm_to_db_by_mkt_stk_w_hist(market_id,item,dfm_data:DataFrame,table_nam
                     update_str = '''UPDATE %s SET %s 
                         WHERE Market_ID = ? AND Stock_ID = ? AND Trans_Datetime = ? ''' %(table_name,upt_str)
                     conn.execute(update_str, tuple(ls_upt_pars))
+            else:
+                raise
             continue
         # insert logic
         logprint('Insert %s stock %s Period %s' % (table_name,item, ts_id.date()))
@@ -224,9 +233,101 @@ def load_dfm_to_db_by_mkt_stk_wo_hist():
     pass
 #    3) 'wo_hist': dfm包含当日数据,无需考虑db中的历史数据,直接insert即可.
 
+def load_dfm_to_db_multi_value_by_mkt_stk_cur(market_id,item,dfm_data:DataFrame,table_name:str,dict_misc_pars:dict,
+                                              process_mode = 'w_check'):
+    """
+    本函数用于多值属性的char的当前数据更新.
+    :param market_id:
+    :param item:
+    :param dfm_data:
+    :param table_name:
+    :param dict_misc_pars:
+    :return:
+    """
+    # load DB contents
+    timestamp = datetime.now()
 
-def load_snapshot_dfm_to_db(dfm_log:DataFrame,table_name,mode:str = 'del&recreate'):
-    dfm_log['Update_time'] = datetime.now()
+    cur_date = timestamp.date()
+    cur_datetime = datetime.strptime(str(cur_date), '%Y-%m-%d')
+    dfm_db_data = pd.read_sql_query("select * from %s where Market_ID = ? and Stock_ID = ? order by Trans_Datetime DESC" %table_name
+                                        , conn, params=(market_id, item), index_col='Trans_Datetime')
+    # print(dfm_data)
+    # print(dfm_db_data)
+    if pd.Timestamp(cur_datetime) in dfm_db_data.index:
+        # entry already exist in table, since it is current date db insert, no need to update history data already exist
+        return
+
+    if process_mode == 'w_check' and len(dfm_db_data) > 0:
+        # only insert DB in case the value is different from latest datetime's values
+        # build a set to hold all multi values in dfm_data
+
+        set_cur_values = dfm_value_to_set(dfm_data,dfm_data.columns)
+        #get latest db data set
+        set_db_values = dfm_value_to_set(dfm_db_data.loc[dfm_db_data.index[0]],dfm_data.columns)
+
+        set_dif_cur2db = set_cur_values - set_db_values
+        set_dif_db2cur = set_db_values - set_cur_values
+        if set_dif_cur2db:
+            logprint('Stock %s new value set appears:' %item,set_dif_cur2db)
+        if set_dif_db2cur:
+            logprint('Stock %s old value set removed:' %item,set_dif_db2cur)
+        if not set_dif_cur2db and not set_dif_db2cur:
+            # no need to update, it is the same as last record
+            logprint('Stock %s value set no changes:' % item)
+            return
+
+    # insert into db
+    ins_str_cols = ''
+    ins_str_pars = ''
+    ls_ins_pars = []
+    logprint('Insert %s stock %s Period %s' % (table_name,item, cur_date))
+    # rename the df with new cols name,use rename function with a dict of old column to new column mapping
+    ls_colnames_dbinsert = list(map(special_process_col_name,dfm_data.columns))
+    ins_str_cols = ','.join(ls_colnames_dbinsert)
+    ins_str_pars = ','.join('?' * len(ls_colnames_dbinsert))
+
+    for id in range(len(dfm_data)):
+        ls_ins_pars.append((market_id, item, cur_datetime, id, timestamp, dict_misc_pars['update_by'])
+                       + tuple(dfm_data.loc[id]))
+
+    if ins_str_cols:
+        ins_str = '''INSERT INTO %s (Market_ID,Stock_ID,Trans_Datetime,Sqno,Created_datetime,Created_by,%s) VALUES (?,?,?,?,?,?,%s)''' % (
+            table_name,ins_str_cols, ins_str_pars)
+        # print(ins_str)
+        try:
+            conn.execute(ins_str, ls_ins_pars)
+        except:
+            raise
+
+
+def dfm_value_to_set(dfm_data:DataFrame,cols:list) -> set:
+    # check dfm_data is Series or Dataframe type
+    # if Series:
+    if isinstance(dfm_data,pd.Series):
+        return set(dfm_data[cols])
+    # if Dataframe
+    ls_values =[]
+    for id in range(len(dfm_data)):
+        ls_values.append(tuple(dfm_data.iloc[id][cols]))
+    # print(ls_values)
+    return set(tuple(ls_values))
+
+
+def load_snapshot_dfm_to_db(dfm_log:DataFrame,table_name,mode:str = '', w_timestamp:bool = False ):
+    """
+    currently support 2 mode:
+    1. used for YY_tables as log table update, in this case, w_timestamp = False, func will add a new column Update_time
+    2. used as general insert entries into table(no update func, just insert), in this case, set w_timestamp = True
+    caution: dfm_log must have same columns as db table.
+    :param dfm_log: the dataframe to insert into db
+    :param table_name:  the db table name
+    :param mode: 'del&recreate' ->del all table entries first; ''-> only insert
+    :param w_timestamp: True -> don't add Update_time col; False-> add Update_time col
+    :return:
+    """
+    if not w_timestamp:
+        dfm_log['Update_time'] = datetime.now()
+
     if mode == 'del&recreate':
         conn.execute('DELETE FROM %s' %table_name)
 
@@ -262,6 +363,21 @@ def special_process_col_name(tempstr:str):
     tempstr = tempstr.replace("]","")
     tempstr = '['+ tempstr+ ']'
     return tempstr
+
+def get_stock_catg(origin:str) -> DataFrame:
+    """
+    获得股票的分类信息
+    :return: dataframe of category
+    """
+    if origin == "":
+        dfm_catg = pd.read_sql_query('''select * from ZCFG_category '''
+                                   , conn)
+       # print(dfm_stocks)
+    else:
+        dfm_catg = pd.read_sql_query('''select * from ZCFG_category
+                                                where Catg_Origin = '%s' ''' %origin
+                                       , conn)
+    return dfm_catg
 
 if __name__ == "__main__":
     # print(get_cn_stocklist())

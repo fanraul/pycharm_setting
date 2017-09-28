@@ -7,10 +7,14 @@ from datetime import datetime
 
 log = True
 
+
 weblinks = {
     'stock_list_easymoney': 'http://quote.eastmoney.com/stocklist.html',   # obselete
     'stock_change_record_qq': 'http://stock.finance.qq.com/corp1/profile.php?zqdm=%(stock_id)s',
-    'stock_category_qq': 'http://stockapp.finance.qq.com/mstats/?mod=all'
+    'stock_category_qq': 'http://stockapp.finance.qq.com/mstats/?mod=all', #obselete
+    'stock_category_w_detail_qq': ["http://stock.gtimg.cn/data/view/bdrank.php?&t=%(catg_type)s/averatio&p=1&o=0&l=9999&v=list_data",
+                                   "http://qt.gtimg.cn/q=%(catg_list)s",
+                                   'http://stock.gtimg.cn/data/index.php?appn=rank&t=pt%(catg_code)s/chr&p=1&o=0&l=9999&v=list_data']
 }
 
 #table created by program dfm2table has prefix DD!
@@ -18,7 +22,8 @@ dbtables = {
     'finpreports_Tquant' :['DD_stock_fin_balance_tquant', 'DD_stock_fin_profit_tquant','DD_stock_fin_cashflow_tquant'],
     'name_hist_qq': 'DD_stock_name_change_hist_qq',
     'fixed_basic_info_tquant': 'DD_stock_fixed_basic_info_tquant',
-    'basic_info1_tquant': 'DD_stock_basic_info1_tquant'
+    'basic_info1_tquant': 'DD_stock_basic_info1_tquant',
+    'stock_category_relation_qq':'DD_stock_category_assignment_qq'
 }
 
 dbtemplate_stock_date = """
@@ -50,6 +55,25 @@ CREATE TABLE [%(table)s](
 (
 	[Market_ID] ASC,
 	[Stock_ID] ASC
+))
+"""
+
+dbtemplate_stock_date_multi_value = """
+CREATE TABLE [%(table)s](
+	[Market_ID] [nvarchar](50) NOT NULL,
+	[Stock_ID] [nvarchar](50) NOT NULL,
+	[Trans_Datetime] [datetime] NOT NULL,
+	[Sqno] [int] NOT NULL,
+	[Created_datetime] [datetime] NULL,
+	[Created_by] [nvarchar](50) NULL,
+	[Last_modified_datetime] [datetime] NULL,
+	[Last_modified_by] [nvarchar](50) NULL,
+ CONSTRAINT [PK_%(table)s] PRIMARY KEY 
+(
+	[Market_ID] ASC,
+	[Stock_ID] ASC,
+	[Trans_Datetime] ASC,
+	[Sqno] ASC
 ))
 """
 
@@ -102,6 +126,37 @@ def dfm_col_type_conversion(dfm:DataFrame,index='',columns= {}, dateformat='%Y-%
             elif 'float' in columns[col] or 'double' in columns[col]:
                 dfm[col] = dfm[col].astype('float')
 
+
+def print_list_nice(ls_tmp):
+    print("\n".join(list(map(lambda x: str(x[0]) + ':' + str(x[1]), ls_tmp))))
+
+def dfmprint(*args, sep=' ',  end='\n',  file=None):
+    pd.set_option('display.max_rows', None)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', None)
+    print(*args, sep=' ',  end='\n',  file=None)
+
+def dfm_A_minus_B(A:DataFrame,B:DataFrame, key_cols:list)->DataFrame:
+    """
+    A - B return the entries which in A but not in B based on key cols, it is mainly used to remove duplicate entries and
+    then insert to DB
+    :param A:
+    :param B:
+    :return:
+    """
+    if len(B) == 0:
+        return A
+    B_tmp=B[key_cols].copy()
+    B_tmp['tmp_col_duplicated'] = 'Y'
+    dfm_merge_by_keycols = A.merge(B_tmp, how='left', on = key_cols)
+    dfm_merge_by_keycols.fillna({'tmp_col_duplicated':'N'},inplace = True)
+    dfm_dif_by_keycols = dfm_merge_by_keycols[dfm_merge_by_keycols.tmp_col_duplicated.isin(['N'])]
+    del dfm_dif_by_keycols['tmp_col_duplicated']
+    return dfm_dif_by_keycols
+    # 不知道为什么,就是不能用A[A.col=='X']进行过滤,找到原因的,duplicated是个函数名,所以不能用其作为列名,有歧义!!
+    # print(dfm_merge_by_keycols[dfm_merge_by_keycols.duplicated == 'X'])
+    # del dfm_merge_by_keycols['duplicated']
+
 if __name__ == "__main__":
     # print(get_cn_stocklist())
     # print(get_chars('Tquant',['FIN10','FIN20','FIN30']))
@@ -113,9 +168,25 @@ if __name__ == "__main__":
     # dict_misc_pars['created_by'] = 'fetch_stock_3fin_report_from_tquant'
     # dict_misc_pars['char_usage'] = 'FIN10'
     # add_new_chars_and_cols({'test1':'decimal(18,2)','test2':'decimal(18,2)'},[],'stock_fin_balance_1',dict_misc_pars)
-    dfm_temp = DataFrame([{'A':'1997-1-3','B':2,'C':'12.23'},{'A':'1997-1-4','B':3,'C':'12.35'}],index=['2017-1-1','2017-1-2'])
-    print(dfm_temp)
-    dfm_col_type_conversion(dfm_temp,index= 'datetime',columns={'A': 'datetime','B':'varchar(50)','C':'double(18,6)'})
-    print(dfm_temp)
-    print(list(dfm_temp.index))
-    print(type(dfm_temp.iloc[0][0]), type(dfm_temp.iloc[0][1]),type(dfm_temp.iloc[0][2]))
+    # dfm_temp = DataFrame([{'A':'1997-1-3','B':2,'C':'12.23'},{'A':'1997-1-4','B':3,'C':'12.35'}],index=['2017-1-1','2017-1-2'])
+    # print(dfm_temp)
+    # dfm_col_type_conversion(dfm_temp,index= 'datetime',columns={'A': 'datetime','B':'varchar(50)','C':'double(18,6)'})
+    # print(dfm_temp)
+    # print(list(dfm_temp.index))
+    # print(type(dfm_temp.iloc[0][0]), type(dfm_temp.iloc[0][1]),type(dfm_temp.iloc[0][2]))
+    # dfm1 = DataFrame([{'A':'A1','B':'B1','C':'C1'},{'A':'A2','B':'B2','C':'C2'},{'A':'A3','B':'B3','C':'C3'},])
+    # dfm2 = DataFrame([{'A':'A1','B':'B1','C':'C1'},{'A':'A2','B':'B4','C':'C4'},{'A':'A3','B':'B3','C':'C5'},])
+    # # dfm2 = DataFrame(columns = ['A', 'B', 'C', 'D'] )
+    # print(dfm1,dfm2,sep='\n')
+    # print(dfm_A_minus_B(dfm1,dfm2,key_cols = ['A','B']))
+    #
+    # dfm3 = DataFrame([{'A':'A1','B':'B1','C':'C1'},{'A':'A2','B':'B2','C':'C2'},{'A':'A3','B':'B3','C':'C3'},],index = ['0','0','1'])
+    # print(DataFrame.to_dict(dfm3))
+    # print(dfm1.values.tolist(),dfm3.columns)
+
+    dfm4 = DataFrame(
+        [{'A': 'A1', 'B': 'B1', 'C': 'C1'}, {'A': 'A2', 'B': 'B2', 'C': 'C2'}, {'A': 'A3', 'B': 'B3', 'C': 'C3'}, ])
+
+    for index,row in dfm4.iterrows():
+        print(index,type(index))
+        print(row,type(row))
