@@ -115,6 +115,9 @@ def add_new_chars_and_cols(dict_cols_cur:dict,ls_cols_db:list,table_name:str,dic
     # use transaction to commit all in one batch
     trans = conn.begin()
     timestamp = datetime.now()
+
+    # no use for SQL server, SQL server doesn't support add col_name after col_name grammer!!
+    col_insert_after = get_col_for_insert(table_name)
     try:
         if ls_db_col_name_newadded:
             alter_str = "ALTER TABLE %s ADD " %table_name
@@ -248,49 +251,65 @@ def load_dfm_to_db_multi_value_by_mkt_stk_cur(market_id,item,dfm_data:DataFrame,
     # load DB contents
     timestamp = datetime.now()
 
-    cur_date = timestamp.date()
-    cur_datetime = datetime.strptime(str(cur_date), '%Y-%m-%d')
+    last_trading_day = gcf.get_last_trading_day()
+    last_trading_daytime = datetime.strptime(str(last_trading_day), '%Y-%m-%d')
     dfm_db_data = pd.read_sql_query("select * from %s where Market_ID = ? and Stock_ID = ? order by Trans_Datetime DESC" %table_name
                                         , conn, params=(market_id, item), index_col='Trans_Datetime')
     # print(dfm_data)
     # print(dfm_db_data)
-    if pd.Timestamp(cur_datetime) in dfm_db_data.index:
+    if pd.Timestamp(last_trading_day) in dfm_db_data.index:
         # entry already exist in table, since it is current date db insert, no need to update history data already exist
         # TODO: may add logic to allow multiple update per day
-        logprint('Table %s no need to update since only one update per day' %table_name)
+        logprint('Table %s entry market %s stock %s no need to update since only one update per day,but value check to ensure consistency!'
+                 %(table_name,market_id,item))
+        # check cur value is the same as db value,if not, inconsistency found, need manually processing
+        #get latest db data set
+        set_latest_db_values = dfm_db_data.loc[dfm_db_data.index[0]]
+        #compare whether the cur dfm values is the same as db dfm values of latest fetching
+        set_dif_cur2db = gcf.setdif_dfm_A_to_B(dfm_data,set_latest_db_values,dfm_data.columns)
+        set_dif_db2cur = gcf.setdif_dfm_A_to_B(set_latest_db_values,dfm_data,dfm_data.columns)
+        # TODO: error handling
+        if len(set_dif_cur2db) > 0:
+            logprint('Inconsistency found for multiple fetchs in one day! Stock %s new value set appears: %s' %(item,set_dif_cur2db))
+        if len(set_dif_db2cur) > 0:
+            logprint('Inconsistency found for multiple fetchs in one day! Stock %s old value set removed: %s' %(item,set_dif_db2cur))
         return
 
     if process_mode == 'w_check' and len(dfm_db_data) > 0:
         # only insert DB in case the value is different from latest datetime's values
         # build a set to hold all multi values in dfm_data
 
-        set_cur_values = dfm_value_to_set(dfm_data,dfm_data.columns)
-        #get latest db data set
-        set_db_values = dfm_value_to_set(dfm_db_data.loc[dfm_db_data.index[0]],dfm_data.columns)
+        # set_cur_values = gcf.dfm_value_to_set(dfm_data,dfm_data.columns)
+        # #get latest db data set
+        # set_db_values = gcf.dfm_value_to_set(dfm_db_data.loc[dfm_db_data.index[0]],dfm_data.columns)
+        # set_dif_cur2db = set_cur_values - set_db_values
+        # set_dif_db2cur = set_db_values - set_cur_values
 
-        set_dif_cur2db = set_cur_values - set_db_values
-        set_dif_db2cur = set_db_values - set_cur_values
+        #get latest db data set
+        set_latest_db_values = dfm_db_data.loc[dfm_db_data.index[0]]
+        #compare whether the cur dfm values is the same as db dfm values of latest fetching
+        set_dif_cur2db = gcf.setdif_dfm_A_to_B(dfm_data,set_latest_db_values,dfm_data.columns)
+        set_dif_db2cur = gcf.setdif_dfm_A_to_B(set_latest_db_values,dfm_data,dfm_data.columns)
+
         if set_dif_cur2db:
             logprint('Stock %s new value set appears:' %item,set_dif_cur2db)
         if set_dif_db2cur:
             logprint('Stock %s old value set removed:' %item,set_dif_db2cur)
         if not set_dif_cur2db and not set_dif_db2cur:
             # no need to update, it is the same as last record
-            logprint('Stock %s value set no changes:' % item)
+            # logprint('Stock %s value set no changes:' % item)
             return
 
     # insert into db
-    ins_str_cols = ''
-    ins_str_pars = ''
     ls_ins_pars = []
-    logprint('Insert %s stock %s Period %s' % (table_name,item, cur_date))
+    logprint('Insert %s stock %s Period %s' % (table_name,item, last_trading_day))
     # rename the df with new cols name,use rename function with a dict of old column to new column mapping
     ls_colnames_dbinsert = list(map(special_process_col_name,dfm_data.columns))
     ins_str_cols = ','.join(ls_colnames_dbinsert)
     ins_str_pars = ','.join('?' * len(ls_colnames_dbinsert))
 
     for id in range(len(dfm_data)):
-        ls_ins_pars.append((market_id, item, cur_datetime, id, timestamp, dict_misc_pars['update_by'])
+        ls_ins_pars.append((market_id, item, last_trading_daytime, id, timestamp, dict_misc_pars['update_by'])
                        + tuple(dfm_data.loc[id]))
 
     if ins_str_cols:
@@ -302,19 +321,6 @@ def load_dfm_to_db_multi_value_by_mkt_stk_cur(market_id,item,dfm_data:DataFrame,
         except:
             raise
 
-
-
-def dfm_value_to_set(dfm_data:DataFrame,cols:list) -> set:
-    # check dfm_data is Series or Dataframe type
-    # if Series:
-    if isinstance(dfm_data,pd.Series):
-        return set(dfm_data[cols])
-    # if Dataframe
-    ls_values =[]
-    for id in range(len(dfm_data)):
-        ls_values.append(tuple(dfm_data.iloc[id][cols]))
-    # print(ls_values)
-    return set(tuple(ls_values))
 
 
 def load_snapshot_dfm_to_db(dfm_log:DataFrame,table_name,mode:str = '', w_timestamp:bool = False ):
@@ -391,6 +397,7 @@ def load_dfm_to_db_cur(dfm_cur_data:DataFrame,key_cols:list,table_name:str,dict_
     2) "wo_update: key_cols存在时,不进行update
 
     传入的dataframe中无需包含Trans_Datetime,Created_datetime,Created_by,Last_modified_datetime,Last_modified_by这四列.
+    trans_datetime是考虑交易所的交易日历的
     Trans_Datetime默认取当前日期.
     :param dfm:
     :param table_name:
@@ -400,10 +407,11 @@ def load_dfm_to_db_cur(dfm_cur_data:DataFrame,key_cols:list,table_name:str,dict_
     """
     # load DB contents
     timestamp = datetime.now()
-    today = datetime.strptime(str(timestamp.date()),'%Y-%m-%d')
+    last_trading_day = gcf.get_last_trading_day()
+    last_trading_daytime = gcf.get_last_trading_daytime()
     dfm_db_data = pd.read_sql_query("select * from %s where Trans_Datetime = ?" %table_name
-                                        , conn, params=(today,))
-    dfm_cur_data['Trans_Datetime'] = today
+                                        , conn, params=(last_trading_daytime,))
+    dfm_cur_data['Trans_Datetime'] = last_trading_daytime
     dfm_insert_data = gcf.dfm_A_minus_B(dfm_cur_data,dfm_db_data,key_cols)
     dfm_update_data = gcf.dfm_A_intersect_B(dfm_cur_data,dfm_db_data,key_cols)
 
@@ -414,7 +422,7 @@ def load_dfm_to_db_cur(dfm_cur_data:DataFrame,key_cols:list,table_name:str,dict_
         ls_ins_pars = []
         for index,row in dfm_insert_data.iterrows():
             # insert logic
-            logprint('Insert table %s new Record %s at Period %s' % (table_name, [row[col] for col in key_cols] , today))
+            logprint('Insert table %s new Record %s at Period %s' % (table_name, [row[col] for col in key_cols] , last_trading_day))
             # rename the df with new cols name,use rename function with a dict of old column to new column mapping
             ls_colnames_dbinsert = list(map(special_process_col_name,dfm_insert_data.columns))
             ins_str_cols = ','.join(ls_colnames_dbinsert)
@@ -440,7 +448,7 @@ def load_dfm_to_db_cur(dfm_cur_data:DataFrame,key_cols:list,table_name:str,dict_
         ls_upt_cols = []
         ls_upt_pars = []
         for index,row in dfm_update_data.iterrows():
-            logprint('Update table %s Record %s at Period %s' % (table_name, [row[col] for col in key_cols], today))
+            logprint('Update table %s Record %s at Period %s' % (table_name, [row[col] for col in key_cols], last_trading_day))
             # rename the df with new cols name,use rename function with a dict of old column to new column mapping
             ls_colnames_dbupdate = list(map(special_process_col_name,dfm_update_data.columns))
             upt_str_cols = '=?,'.join(ls_colnames_dbupdate) +'=?'+ ", Last_modified_datetime = ?,Last_modified_by=?"
@@ -453,6 +461,24 @@ def load_dfm_to_db_cur(dfm_cur_data:DataFrame,key_cols:list,table_name:str,dict_
                 WHERE %s ''' % (table_name, upt_str_cols,upt_str_keycols)
             conn.execute(update_str, tuple(ls_upt_pars))
 
+
+def get_col_for_insert(table_name, col_insert_before:str ='Created_datetime'):
+    """
+    there are 4 fours currently in table template for DD_tables defination, but I want to insert new columns before these
+    4 common cols, so I use sys tabel to get the last col name before these 4 standard template cols.
+    Since SQL only support "insert after", no "insert before"
+    :param table_name:
+    :param col_insert_before:
+    :return:
+    """
+    dfm_db1 = pd.read_sql_query(
+        "select * from SysColumns Where ID = OBJECT_ID('%s')" %table_name
+        , conn)
+
+    #print(dfm_db1)
+    insert_offset = dfm_db1[dfm_db1.name == col_insert_before].index[0] -1
+
+    return dfm_db1.iloc[insert_offset]['name']
 
 
 if __name__ == "__main__":
@@ -469,4 +495,7 @@ if __name__ == "__main__":
 #    conn.execute('INSERT INTO YY_stock_changes_qq ([公布前内容],[公布后内容],[公布日期],[变动日期],[变动项目],[Stock_ID],
     # [Market_ID],[Update_time]) VALUES (?,?,?,?,?,?,?,?)', ('北京中天信会计师事务所', '四川华信(集团)会计师事务所',
     # '2002-01-12 00:00:00', None, '境内会计师事务所', '000155', 'SZ', '2017-09-12 21:13:12'))
+
+
+
     pass

@@ -34,6 +34,9 @@ def fetch2DB():
         # print(url_link)
         soup_category = gcf.get_webpage(url_link)
         list_data = re.findall("data:'(.*)'",str(soup_category))
+        # TODO: error handling
+        assert len(list_data) == 1 , 'No category details can be found under category type %s' %(i+1)
+
         if i==2 or i==3:
             # need to replace qt with hz, eg. bkqt034600->bkhz034600
             ls_catg.extend([x[:2]+'hz'+x[4:] for x in list_data[0].split(',')])
@@ -49,12 +52,12 @@ def fetch2DB():
         # every 80 items,get web page in one batch
         # 在for循环中用每n个处理一次时,要注意要用(i+1) % n,因为i是从0开始的.
         if (i+1) % 50 == 0:
-            dfm_catgs_tmp, dfm_catgs_trans_tmp = parse_concept(','.join(ls_tmp))
+            dfm_catgs_tmp, dfm_catgs_trans_tmp = parse_concept(ls_tmp)
             ls_dfm_catgs.append(dfm_catgs_tmp)
             ls_dfm_catgs_trans.append(dfm_catgs_trans_tmp)
             ls_tmp=[]
     if ls_tmp:
-        dfm_catgs_tmp, dfm_catgs_trans_tmp = parse_concept(','.join(ls_tmp))
+        dfm_catgs_tmp, dfm_catgs_trans_tmp = parse_concept(ls_tmp)
         ls_dfm_catgs.append(dfm_catgs_tmp)
         ls_dfm_catgs_trans.append(dfm_catgs_trans_tmp)
 
@@ -66,6 +69,7 @@ def fetch2DB():
     # get db category list
     dfm_db_catg = df2db.get_stock_catg('QQ')
     dfm_new_catg = gcf.dfm_A_minus_B(dfm_cur_catg,dfm_db_catg,['Catg_Origin','Catg_Type','Catg_Name'])
+
     # print(dfm_db_catg,dfm_cur_catg,dfm_new_catg,sep = '\n')
     if len(dfm_new_catg) > 0:
         # gcf.dfmprint(dfm_cur_catg)
@@ -74,6 +78,11 @@ def fetch2DB():
                                                    for i in range(len(dfm_new_catg))]), sep = '\n')
         df2db.load_snapshot_dfm_to_db(dfm_new_catg,'ZCFG_category',w_timestamp=True)
 
+    # inform obsolete category to user to make sure no error occures,no action in db side
+    dfm_obselete_catg = gcf.dfm_A_minus_B(dfm_db_catg, dfm_cur_catg,  ['Catg_Origin', 'Catg_Type', 'Catg_Name'])
+    if len(dfm_obselete_catg) > 0:
+        for index,row in dfm_obselete_catg:
+            logprint('Category Type %s Name %s is obselete! Please double check!' %(row['Catg_Type'],row['Catg_name']))
 
 
     # 2.2 insert new stock category relationship into DB
@@ -88,7 +97,7 @@ def fetch2DB():
     dict_misc_pars_catg['allow_multiple'] ='Y'
     dict_misc_pars_catg['created_by'] = dict_misc_pars_catg['update_by'] ='fetch_stock_category_and_daily_status_from_qq'
     dict_misc_pars_catg['char_usage'] = 'CATG'
-    dict_cols_cur_catg = {'所属板块': 'nvarchar(50)'}
+    dict_cols_cur_catg = {'Catg_Type': 'nvarchar(50)','Catg_Name':'nvarchar(50)'}
     df2db.add_new_chars_and_cols(dict_cols_cur_catg, list(dfm_db_chars_catg['Char_ID']), table_name_concept,
                                  dict_misc_pars_catg)
 
@@ -155,6 +164,7 @@ def parse_stock_under_catg(dfm_catgs:DataFrame) ->dict:
         url_catgstklist = gcf.weblinks['stock_category_w_detail_qq'][2] %{'catg_code':catg_code}
         soup_stklst = gcf.get_webpage(url_catgstklist)
         list_data = re.findall("data:'(.*)'", str(soup_stklst))
+
         if list_data:
             ls_stk = list_data[0].split(',')
             ls_stk = [stk.strip().upper() for stk in ls_stk]
@@ -163,20 +173,23 @@ def parse_stock_under_catg(dfm_catgs:DataFrame) ->dict:
                 ls_catgs = dt_stkcatgs.get(stkcode, [])
                 # print(ls_catgs)
                 if ls_catgs:
-                    ls_catgs.append({'所属板块': row['Catg_Name']})
+                    ls_catgs.append({'Catg_Type': row['Catg_Type'],'Catg_Name': row['Catg_Name']})
                 else:
-                    dt_stkcatgs[stkcode] = [{'所属板块': row['Catg_Name']}]
+                    dt_stkcatgs[stkcode] = [{'Catg_Type': row['Catg_Type'],'Catg_Name': row['Catg_Name']}]
         else:
+            # TODO: error handling
             logprint('Exception: Catg %s has no stock assigned' %row['Catg_Name'] )
-
+            assert 0==1, 'inconsistent found, please check!'
 
     return dt_stkcatgs
 
 
-def parse_concept(str_catgs):
+def parse_concept(ls_catgs:list):
+    catgs_num = len(ls_catgs)
+    str_catgs =','.join(ls_catgs)
     url_catgdetail = gcf.weblinks['stock_category_w_detail_qq'][1] % {'catg_list': str_catgs}
+    #print(url_catgdetail)
     soup_catg = gcf.get_webpage(url_catgdetail)
-    # print(url_catgdetail)
     # print(soup_catg)
 
     dt_type = {'01':'腾讯行业',
@@ -216,7 +229,17 @@ def parse_concept(str_catgs):
             dt_catg_daily_trans['总成交额万元']  = float(ls_item[10])
             ls_dfm_catg_daily_trans.append(dt_catg_daily_trans)
         else:
+            # TODO: error handling
             raise
+
+    # TODO:error handling
+    if len(ls_dfm_catg) != catgs_num:
+        # not all catg code get detail line item, it is an exception
+        set_delta_catg = set([x[-6:] for x in ls_catgs]) - set([y['Catg_Reference'] for y in ls_dfm_catg ])
+        logprint("Below Category reference can't get daily details:" )
+        logprint(set_delta_catg)
+        assert 0==1, 'inconsistent found, please check manually'
+
     return (DataFrame(ls_dfm_catg),DataFrame(ls_dfm_catg_daily_trans))
 
 if __name__ == '__main__':

@@ -79,6 +79,7 @@ def fetch2DB():
                     VALUES (?,?,?,?,?,?,?,?,?,?) """
         try:
             conn.execute(ins_str,ls_ins_pars)
+            logprint('INSERT INTO stock_basic_info is done')
         except:
             raise
 
@@ -87,6 +88,7 @@ def fetch2DB():
                      margin_ratio = ?,multiplier=?,price_tick=? WHERE Market_ID = ? AND Stock_ID = ?"""
         try:
             conn.execute(upt_str,ls_upt_pars)
+            logprint('UPDATE stock_basic_info is done')
         except:
             raise
 

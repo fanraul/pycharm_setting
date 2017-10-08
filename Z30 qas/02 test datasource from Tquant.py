@@ -1,15 +1,17 @@
 import tquant.getdata as gt
 import tquant.myquant as mt
 from pandas import DataFrame as df
+import R50_general.general_constants_funcs as gcf
+import datetime
 
 
-"get_financial 获得股票财务报表接口"
-ls_financial = gt.get_financial('300274')
-print(type(ls_financial[0]))
-
-ls_financial[0].to_excel("资产负债表.xls")
-ls_financial[1].to_excel("利润表.xls")
-ls_financial[2].to_excel("现金流量表.xls")
+# "get_financial 获得股票财务报表接口"
+# ls_financial = gt.get_financial('300274')
+# print(type(ls_financial[0]))
+#
+# ls_financial[0].to_excel("资产负债表.xls")
+# ls_financial[1].to_excel("利润表.xls")
+# ls_financial[2].to_excel("现金流量表.xls")
 
 
 
@@ -44,4 +46,8 @@ ls_financial[2].to_excel("现金流量表.xls")
 # mt.get_fund().to_excel('fund.xls')
 # mt.get_index().to_excel('index.xls')
 
-gt.get_brief(['600100','600000']).to_excel('上市公司基本资料.xls')
+# gt.get_brief(['600100','600000']).to_excel('上市公司基本资料.xls')
+
+today = datetime.datetime.now()
+yesterday = today - datetime.timedelta(days =1)
+print(gt.get_calendar(yesterday,today))

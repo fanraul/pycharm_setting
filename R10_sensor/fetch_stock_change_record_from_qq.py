@@ -57,13 +57,14 @@ def fetch2DB(mode:str = ''):
     # check whether db table is created.
     table_name = gcf.dbtables['name_hist_qq']
     df2db.create_table_by_template(table_name,table_type='stock_date')
-    table_name_concept = gcf.dbtables['category_qq']
-    df2db.create_table_by_template(table_name_concept,table_type='stock_date_multi_value')
+
+    # table_name_concept = gcf.dbtables['category_qq']
+    # df2db.create_table_by_template(table_name_concept,table_type='stock_date_multi_value')
 
     # get db category list
-    dfm_db_catg = df2db.get_stock_catg('QQ')
-    set_db_catg = df2db.dfm_value_to_set(dfm_db_catg,['Catg_Name'])
-    print(set_db_catg)
+    # dfm_db_catg = df2db.get_stock_catg('QQ')
+    # set_db_catg = df2db.dfm_value_to_set(dfm_db_catg,['Catg_Name'])
+    # print(set_db_catg)
 
     ls_changes =[]
     # step2:loop at stock list and fetch and save to DB
