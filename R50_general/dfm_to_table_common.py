@@ -11,17 +11,15 @@ from datetime import datetime
 dcm_sql = dcm(echo=False)
 conn = dcm_sql.getconn()
 
-def get_cn_stocklist(stock :str ="") -> DataFrame:
+def get_cn_stocklist(stock :str ="", str_excluded_stockids="''") -> DataFrame:
     """
     获得沪市和深市的股票清单
     :return: dataframe of SH and SZ stocks
     """
     if stock == "":
-        dfm_stocks = pd.read_sql_query('''select * from stock_basic_info 
-                                            where ((Market_ID = 'SH' and Stock_ID like '6%') 
+        dfm_stocks = pd.read_sql_query('''select * from stock_basic_info where ((Market_ID = 'SH' and Stock_ID like '6%') 
                                             or (Market_ID = 'SZ' and (Stock_ID like '0%' or Stock_ID like '3%' )))
-                                            and sec_type = '1'
-                                                '''
+                                            and sec_type = '1' ''' +  'and Stock_ID not in (%s)' %str_excluded_stockids
                                    , conn)
        # print(dfm_stocks)
     else:
@@ -229,7 +227,9 @@ def load_dfm_to_db_by_mkt_stk_w_hist(market_id,item,dfm_data:DataFrame,table_nam
             table_name,ins_str_cols, ins_str_pars)
         # print(ins_str)
         try:
-            conn.execute(ins_str, ls_ins_pars)
+            for ins_par in ls_ins_pars:
+                conn.execute(ins_str, ins_par)
+            # conn.execute(ins_str, ls_ins_pars)
         except:
             raise
 

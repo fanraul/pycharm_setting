@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import urllib.request
+import urllib.error
 import pandas as pd
 from pandas import Series, DataFrame
 import numpy as np
@@ -14,6 +15,8 @@ import os.path
 import mimetypes
 import email
 import tushare as ts
+import re
+import time
 
 # global variable for log processing
 log = True
@@ -21,6 +24,7 @@ log_folder = 'C:/00 RichMinds/log/'
 log_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 log_file = ''
 log_job_name =''
+
 
 def setup_log_file(jobname:str):
     global log_file,log_job_name
@@ -33,7 +37,8 @@ weblinks = {
     'stock_category_qq': 'http://stockapp.finance.qq.com/mstats/?mod=all', #obselete
     'stock_category_w_detail_qq': ["http://stock.gtimg.cn/data/view/bdrank.php?&t=%(catg_type)s/averatio&p=1&o=0&l=9999&v=list_data",
                                    "http://qt.gtimg.cn/q=%(catg_list)s",
-                                   'http://stock.gtimg.cn/data/index.php?appn=rank&t=pt%(catg_code)s/chr&p=1&o=0&l=9999&v=list_data']
+                                   'http://stock.gtimg.cn/data/index.php?appn=rank&t=pt%(catg_code)s/chr&p=1&o=0&l=9999&v=list_data'],
+    'stock_structure_sina':'http://vip.stock.finance.sina.com.cn/corp/go.php/vCI_StockStructure/stockid/%s.phtml',
 }
 
 #table created by program dfm2table has prefix DD!
@@ -43,7 +48,8 @@ dbtables = {
     'fixed_basic_info_tquant': 'DD_stock_fixed_basic_info_tquant',
     'basic_info1_tquant': 'DD_stock_basic_info1_tquant',
     'stock_category_relation_qq':'DD_stock_category_assignment_qq',
-    'category_daily_trans_qq': 'DD_category_daily_noauth_qq'
+    'category_daily_trans_qq': 'DD_category_daily_noauth_qq',
+    'stock_structure_sina':'DD_stock_structure_sina',
 }
 
 dbtemplate_stock_date = """
@@ -124,20 +130,39 @@ def logprint(*args, sep=' ',  end='\n',  file=None ):
             log_file = log_folder +'tmp/templog'+log_timestamp+'.txt'
         print(*args, sep=' ', end='\n', file= open(log_file,'a'))
 
-def get_webpage(weblink_str :str):
+def get_webpage(weblink_str :str, time_wait = 0):
     req = urllib.request.Request(weblink_str)
     user_agent = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.82 Safari/537.36'
     req.add_header('User-Agent', user_agent)
     req.add_header('Referer',weblink_str)
     try:
+        time.sleep(time_wait)
+        print('web page loading start..')
         response = urllib.request.urlopen(req)
         html = response.read()
     #print (html.decode("gb2312"))
         soup = BeautifulSoup(html,"lxml")
     #        print (soup.prettify())
+        print('web page loading end..')
         return soup
-    except:
-        logprint("Weblink %s open failed:" %weblink_str,e.code,e.read().decode("utf8"))
+    except urllib.error.HTTPError as e:
+        logprint("The server couldn't fulfill the request.Page link is %s" %weblink_str)
+        logprint('Error code: %s; Error Reason: %s' %(e.code,e.reason))
+        raise e
+        # if time_wait > 600:
+        #     raise
+        # logprint("Web page retry after %s..." %(time_wait+300))
+        # get_webpage(weblink_str,time_wait + 300)
+    except urllib.error.URLError as e:
+        logprint('We failed to reach a server. Page link is %s' %weblink_str)
+        logprint('Error Reason: %s' %(e.reason))
+        raise e
+        # if time_wait > 600:
+        #     raise
+        # logprint("Web page retry after %s..." %(time_wait+300))
+        # get_webpage(weblink_str, time_wait + 300)
+    except Exception as e:
+        logprint("Weblink %s open failed error unkown:" %weblink_str,e)
         raise
 
 
@@ -160,17 +185,30 @@ def dfm_col_type_conversion(dfm:DataFrame,index='',columns= {}, dateformat='%Y-%
         if col in dfm.columns:
             new_type = columns[col]
             if new_type == 'datetime':
-                dfm[col] = dfm[col].map(lambda x: datetime.strptime(x,dateformat) if x != '--' else pd.NaT)
+                # ☆if no date is specified, put '1900-1-1' as non-sense date so that all date type field has value!
+                dfm[col] = dfm[col].map(lambda x: datetime.strptime(x,dateformat) if x != '--' and x != '' else datetime(1900,1,1))
             elif 'varchar' in columns[col] or 'str' == columns[col]:
                 dfm[col] = dfm[col].astype('str')
             elif 'int' in columns[col]:
+                dfm[col] = dfm[col].map(lambda x: x if x != '--' else 0)
                 dfm[col] = dfm[col].astype('int')
             elif 'float' in columns[col] or 'double' in columns[col]:
-                dfm[col] = dfm[col].astype('float')
+                dfm[col] = dfm[col].map(float_conversion)
 
+
+def float_conversion(x):
+    if type(x) == type('a'):
+        if x == '--':
+            return 0.0
+        elif len(x) >2 and x[-2:] == '万股':
+            return float(x[:-2])
+
+    return float(x)
 
 def print_list_nice(ls_tmp):
-    print("\n".join(list(map(lambda x: str(x[0]) + ':' + str(x[1]), ls_tmp))))
+    print('List content is shown as below:')
+    print("\n------------------------------\n".join(list(map(lambda x: str(x), ls_tmp))))
+    print('List content Ends.')
 
 def dfmprint(*args, sep=' ',  end='\n',  file=None):
     pd.set_option('display.max_rows', None)
@@ -376,6 +414,7 @@ def send_daily_job_log(content:str,str_except:str = ''):
 
 def exception_handler():
     pass
+
 
 if __name__ == "__main__":
     # print(get_cn_stocklist())
