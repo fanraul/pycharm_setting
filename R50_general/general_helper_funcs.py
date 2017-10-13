@@ -1,22 +1,21 @@
-from bs4 import BeautifulSoup
-import urllib.request
-import urllib.error
-import pandas as pd
-from pandas import Series, DataFrame
-import numpy as np
-from datetime import datetime,timedelta
-import tquant.getdata as gt
-import tquant.myquant as mt
-import smtplib
-import email.mime.multipart as multipart# import MIMEMultipart
-from email.mime.text import MIMEText # import MIMEText
-from email.mime.base import MIMEBase# import MIMEBase
-import os.path
-import mimetypes
 import email
-import tushare as ts
-import re
+import email.mime.multipart as multipart  # import MIMEMultipart
+import mimetypes
+import os.path
+import smtplib
 import time
+import urllib.error
+import urllib.request
+from datetime import datetime
+from email.mime.base import MIMEBase  # import MIMEBase
+from email.mime.text import MIMEText  # import MIMEText
+
+import pandas as pd
+import tushare as ts
+from bs4 import BeautifulSoup
+from pandas import DataFrame
+
+import tquant.getdata as gt
 
 # global variable for log processing
 log = True
@@ -24,103 +23,6 @@ log_folder = 'C:/00 RichMinds/log/'
 log_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 log_file = ''
 log_job_name =''
-
-
-def setup_log_file(jobname:str):
-    global log_file,log_job_name
-    log_job_name = jobname
-    log_file = log_folder + jobname + '_' + log_timestamp + '.txt'
-
-weblinks = {
-    'stock_list_easymoney': 'http://quote.eastmoney.com/stocklist.html',   # obselete
-    'stock_change_record_qq': 'http://stock.finance.qq.com/corp1/profile.php?zqdm=%(stock_id)s',
-    'stock_category_qq': 'http://stockapp.finance.qq.com/mstats/?mod=all', #obselete
-    'stock_category_w_detail_qq': ["http://stock.gtimg.cn/data/view/bdrank.php?&t=%(catg_type)s/averatio&p=1&o=0&l=9999&v=list_data",
-                                   "http://qt.gtimg.cn/q=%(catg_list)s",
-                                   'http://stock.gtimg.cn/data/index.php?appn=rank&t=pt%(catg_code)s/chr&p=1&o=0&l=9999&v=list_data'],
-    'stock_structure_sina':'http://vip.stock.finance.sina.com.cn/corp/go.php/vCI_StockStructure/stockid/%s.phtml',
-}
-
-#table created by program dfm2table has prefix DD!
-dbtables = {
-    'finpreports_Tquant' :['DD_stock_fin_balance_tquant', 'DD_stock_fin_profit_tquant','DD_stock_fin_cashflow_tquant'],
-    'name_hist_qq': 'DD_stock_name_change_hist_qq',
-    'fixed_basic_info_tquant': 'DD_stock_fixed_basic_info_tquant',
-    'basic_info1_tquant': 'DD_stock_basic_info1_tquant',
-    'stock_category_relation_qq':'DD_stock_category_assignment_qq',
-    'category_daily_trans_qq': 'DD_category_daily_noauth_qq',
-    'stock_structure_sina':'DD_stock_structure_sina',
-}
-
-dbtemplate_stock_date = """
-CREATE TABLE [%(table)s](
-	[Market_ID] [nvarchar](50) NOT NULL,
-	[Stock_ID] [nvarchar](50) NOT NULL,
-	[Trans_Datetime] [datetime] NOT NULL,
-	[Created_datetime] [datetime] NULL,
-	[Created_by] [nvarchar](50) NULL,
-	[Last_modified_datetime] [datetime] NULL,
-	[Last_modified_by] [nvarchar](50) NULL,
- CONSTRAINT [PK_%(table)s] PRIMARY KEY 
-(
-	[Market_ID] ASC,
-	[Stock_ID] ASC,
-	[Trans_Datetime] ASC
-))
-"""
-
-dbtemplate_stock_wo_date = """
-CREATE TABLE [%(table)s](
-	[Market_ID] [nvarchar](50) NOT NULL,
-	[Stock_ID] [nvarchar](50) NOT NULL,
-	[Created_datetime] [datetime] NULL,
-	[Created_by] [nvarchar](50) NULL,
-	[Last_modified_datetime] [datetime] NULL,
-	[Last_modified_by] [nvarchar](50) NULL,
- CONSTRAINT [PK_%(table)s] PRIMARY KEY 
-(
-	[Market_ID] ASC,
-	[Stock_ID] ASC
-))
-"""
-
-dbtemplate_stock_date_multi_value = """
-CREATE TABLE [%(table)s](
-	[Market_ID] [nvarchar](50) NOT NULL,
-	[Stock_ID] [nvarchar](50) NOT NULL,
-	[Trans_Datetime] [datetime] NOT NULL,
-	[Sqno] [int] NOT NULL,
-	[Created_datetime] [datetime] NULL,
-	[Created_by] [nvarchar](50) NULL,
-	[Last_modified_datetime] [datetime] NULL,
-	[Last_modified_by] [nvarchar](50) NULL,
- CONSTRAINT [PK_%(table)s] PRIMARY KEY 
-(
-	[Market_ID] ASC,
-	[Stock_ID] ASC,
-	[Trans_Datetime] ASC,
-	[Sqno] ASC
-))
-"""
-
-dbtemplate_catg_date = """
-CREATE TABLE [%(table)s](
-	[Catg_Type] [nvarchar](50) NOT NULL,
-	[Catg_Name] [nvarchar](50) NOT NULL,
-	[Trans_Datetime] [datetime] NOT NULL,
-	[Created_datetime] [datetime] NULL,
-	[Created_by] [nvarchar](50) NULL,
-	[Last_modified_datetime] [datetime] NULL,
-	[Last_modified_by] [nvarchar](50) NULL,
- CONSTRAINT [PK_%(table)s] PRIMARY KEY 
-(
-	[Catg_Type] ASC,
-	[Catg_Name] ASC,
-	[Trans_Datetime] ASC
-))
-"""
-
-
 
 def logprint(*args, sep=' ',  end='\n',  file=None ):
     global log_file
@@ -130,39 +32,53 @@ def logprint(*args, sep=' ',  end='\n',  file=None ):
             log_file = log_folder +'tmp/templog'+log_timestamp+'.txt'
         print(*args, sep=' ', end='\n', file= open(log_file,'a'))
 
-def get_webpage(weblink_str :str, time_wait = 0):
+def setup_log_file(jobname:str):
+    global log_file,log_job_name
+    log_job_name = jobname
+    log_file = log_folder + jobname + '_' + log_timestamp + '.txt'
+
+def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False):
+    """
+
+    :param weblink_str: str of web link to web scrap
+    :param time_wait: time to wait before open web link
+    :param flg_return_json: True-> return str of repsonse,used in json senario
+                            False-> return beautifulsoap object
+    :return:
+    """
     req = urllib.request.Request(weblink_str)
     user_agent = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.82 Safari/537.36'
     req.add_header('User-Agent', user_agent)
     req.add_header('Referer',weblink_str)
     try:
         time.sleep(time_wait)
-        print('web page loading start..')
+        print('web page %s loading start..' %weblink_str)
         response = urllib.request.urlopen(req)
         html = response.read()
-    #print (html.decode("gb2312"))
+        print('web page loading end..')
+        if flg_return_json:
+            return html.decode()
         soup = BeautifulSoup(html,"lxml")
     #        print (soup.prettify())
-        print('web page loading end..')
         return soup
     except urllib.error.HTTPError as e:
-        logprint("The server couldn't fulfill the request.Page link is %s" %weblink_str)
-        logprint('Error code: %s; Error Reason: %s' %(e.code,e.reason))
+        logprint("The server couldn't fulfill the request.Page link is %s" % weblink_str)
+        logprint('Error code: %s; Error Reason: %s' % (e.code, e.reason))
         raise e
         # if time_wait > 600:
         #     raise
         # logprint("Web page retry after %s..." %(time_wait+300))
         # get_webpage(weblink_str,time_wait + 300)
     except urllib.error.URLError as e:
-        logprint('We failed to reach a server. Page link is %s' %weblink_str)
-        logprint('Error Reason: %s' %(e.reason))
+        logprint('We failed to reach a server. Page link is %s' % weblink_str)
+        logprint('Error Reason: %s' % (e.reason))
         raise e
         # if time_wait > 600:
         #     raise
         # logprint("Web page retry after %s..." %(time_wait+300))
         # get_webpage(weblink_str, time_wait + 300)
     except Exception as e:
-        logprint("Weblink %s open failed error unkown:" %weblink_str,e)
+        logprint("Weblink %s open failed error unkown:" % weblink_str, e,type(e))
         raise
 
 
@@ -299,14 +215,14 @@ def func_call_with_trace(func_name,*func_args,dt_args_w_name = {},program_name:s
     :return:
     """
     start_time = datetime.now()
-    logprint('*********         Start function call %s.%s     ***********' %(program_name,
-                                                                             func_name.__name__))
+    logprint('*********         Start function call %s.%s     ***********' % (program_name,
+                                                                              func_name.__name__))
     func_name(*func_args,**dt_args_w_name)
     end_time = datetime.now()
     time_spent = end_time-start_time
-    logprint('*********  End function call %s.%s, time spent: %d seconds  *************' %(program_name,
-                                                                                        func_name.__name__,
-                                                                                time_spent.total_seconds()))
+    logprint('*********  End function call %s.%s, time spent: %d seconds  *************' % (program_name,
+                                                                                            func_name.__name__,
+                                                                                            time_spent.total_seconds()))
 
 def get_market_calendar(startdate,enddate,market_id:str='') ->list:
     """
@@ -413,8 +329,8 @@ def send_daily_job_log(content:str,str_except:str = ''):
     send_email(receiver, title, content, attachment)
 
 def exception_handler():
+    # TODO finish exception handler
     pass
-
 
 if __name__ == "__main__":
     # print(get_cn_stocklist())
@@ -459,3 +375,5 @@ if __name__ == "__main__":
     # send_email('fanraul@icloud.com;terry.fan@sparkleconsulting.com', 'email test',
     #            'this is a test for email attachement',
     #            ['C:/00 RichMinds/Github/RichMinds/R10_sensor/tmp.xls','C:/00 RichMinds/Github/RichMinds/README.md'])
+
+

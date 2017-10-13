@@ -1,9 +1,10 @@
+import R50_general.general_constants
 from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
-from R50_general.general_constants_funcs import logprint
+from R50_general.general_helper_funcs import logprint
 import pandas as pd
 from pandas import Series, DataFrame
 import numpy as np
-import R50_general.general_constants_funcs as gcf
+import R50_general.general_helper_funcs as gcf
 from datetime import datetime
 
 #initial steps:
@@ -17,13 +18,18 @@ def get_cn_stocklist(stock :str ="", str_excluded_stockids="''") -> DataFrame:
     :return: dataframe of SH and SZ stocks
     """
     if stock == "":
-        dfm_stocks = pd.read_sql_query('''select * from stock_basic_info where ((Market_ID = 'SH' and Stock_ID like '6%') 
+        dfm_stocks = pd.read_sql_query('''select Market_ID,Stock_ID,Stock_Name,is_active,
+                                            Market_ID + Stock_ID as MktStk_ID 
+                                            from stock_basic_info 
+                                            where ((Market_ID = 'SH' and Stock_ID like '6%') 
                                             or (Market_ID = 'SZ' and (Stock_ID like '0%' or Stock_ID like '3%' )))
                                             and sec_type = '1' ''' +  'and Stock_ID not in (%s)' %str_excluded_stockids
                                    , conn)
        # print(dfm_stocks)
     else:
-        dfm_stocks = pd.read_sql_query('''select * from stock_basic_info 
+        dfm_stocks = pd.read_sql_query('''select Market_ID,Stock_ID,Stock_Name,is_active,
+                                            Market_ID + Stock_ID as MktStk_ID 
+                                            from stock_basic_info
                                                 where  (Market_ID = 'SH' or Market_ID = 'SZ')  
                                                 and sec_type = '1'
                                                     ''' + "and Stock_ID = '%s'" %stock
@@ -82,13 +88,13 @@ def create_table_by_template(table_name:str,table_type:str):
                                         conn)
     if len(dfm_table_check) == 0:
         if table_type == 'stock_date':
-            crt_str = gcf.dbtemplate_stock_date %{'table':table_name.strip()}
+            crt_str = R50_general.general_constants.dbtemplate_stock_date % {'table':table_name.strip()}
         elif table_type == 'stock_date_multi_value':
-            crt_str = gcf.dbtemplate_stock_date_multi_value %{'table':table_name.strip()}
+            crt_str = R50_general.general_constants.dbtemplate_stock_date_multi_value % {'table':table_name.strip()}
         elif table_type == 'stock_wo_date':
-            crt_str = gcf.dbtemplate_stock_wo_date %{'table':table_name.strip()}
+            crt_str = R50_general.general_constants.dbtemplate_stock_wo_date % {'table':table_name.strip()}
         elif table_type == 'catg_date':
-            crt_str = gcf.dbtemplate_catg_date % {'table': table_name.strip()}
+            crt_str = R50_general.general_constants.dbtemplate_catg_date % {'table': table_name.strip()}
         else:
             raise
         conn.execute(crt_str)
@@ -122,7 +128,7 @@ def add_new_chars_and_cols(dict_cols_cur:dict,ls_cols_db:list,table_name:str,dic
             for i in range(len(ls_db_col_name_newadded)):
                 alter_str += "%(col_name)s %(data_type)s," %{'col_name':ls_db_col_name_newadded[i],
                                                              'data_type': dict_cols_cur[ls_cols_newadded[i]]}
-                logprint("new column added in table stock_fin_balance:", ls_db_col_name_newadded[i])
+                logprint("new column added in table %s:" %table_name, ls_db_col_name_newadded[i])
             alter_str = alter_str[:-1]
             print(alter_str)
             conn.execute(alter_str)

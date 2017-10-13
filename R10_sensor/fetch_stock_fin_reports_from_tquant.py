@@ -4,9 +4,10 @@ import numpy as np
 
 from datetime import datetime
 
+import R50_general.general_constants
 from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
-from R50_general.general_constants_funcs import logprint
-import R50_general.general_constants_funcs as gc
+from R50_general.general_helper_funcs import logprint
+import R50_general.general_helper_funcs as gc
 import R50_general.dfm_to_table_common as df2db
 
 import tquant.getdata as gt
@@ -64,7 +65,7 @@ def fetch2DB_individual(item : str, dfm_db_chars):
 
     for i in range(len(ls_finreports)):
         #get db table name for fin report
-        trans_table_name = gc.dbtables['finpreports_Tquant'][i]
+        trans_table_name = R50_general.general_constants.dbtables['finpreports_Tquant'][i]
         #check table exist or not, if not create it by template string
         df2db.create_table_by_template(trans_table_name,table_type='stock_date')
         dfm_fin=ls_finreports[i]

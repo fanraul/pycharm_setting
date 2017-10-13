@@ -3,14 +3,14 @@ from pandas import Series, DataFrame
 import numpy as np
 
 from bs4 import BeautifulSoup
-import urllib.request
 import re
 
 from datetime import datetime
 
-from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
-import R50_general.general_constants_funcs as gcf
-from R50_general.general_constants_funcs import logprint
+import R50_general.advanced_helper_funcs as ahf
+import R50_general.general_constants
+import R50_general.general_helper_funcs as gcf
+from R50_general.general_helper_funcs import logprint
 import R50_general.dfm_to_table_common as df2db
 
 """
@@ -23,8 +23,9 @@ it extract below 3 types datas
 -stock category info (obsolete,data source quality not good!!)
 """
 
+mode = ''
 
-def fetch2DB(mode:str = ''):
+def fetch2DB(stockid:str = ''):
     """
     fetch stock name history and update into DB
     :param mode: if mode = 'update_log" then delete all entries in YY_stock_changes_qq,otherwise only update name changes
@@ -32,9 +33,7 @@ def fetch2DB(mode:str = ''):
     """
     # init step
     # step2.1: get current stock list
-    dfm_stocks = df2db.get_cn_stocklist()
-    #only for test purpose,use one stock to test.
-    # dfm_stocks = df2db.get_cn_stocklist('000155')
+    dfm_stocks = df2db.get_cn_stocklist(stockid)
 
     #get chars for name change hist
     dfm_db_chars = df2db.get_chars('QQ', ['NAME_HIST'])
@@ -55,7 +54,7 @@ def fetch2DB(mode:str = ''):
     dict_misc_pars_catg['char_usage'] = 'CATG'
 
     # check whether db table is created.
-    table_name = gcf.dbtables['name_hist_qq']
+    table_name = R50_general.general_constants.dbtables['name_hist_qq']
     df2db.create_table_by_template(table_name,table_type='stock_date')
 
     # table_name_concept = gcf.dbtables['category_qq']
@@ -71,7 +70,7 @@ def fetch2DB(mode:str = ''):
     for item in dfm_stocks['Stock_ID']:         # get column Stock_ID from dataframe
         # Step1: parsing webpage and produce stock list
         logprint('Processing stock:', item)
-        url_stock_profile = gcf.weblinks['stock_change_record_qq'] %{'stock_id':item}
+        url_stock_profile = R50_general.general_constants.weblinks['stock_change_record_qq'] % {'stock_id':item}
         soup_profile = gcf.get_webpage(url_stock_profile)
         if soup_profile:
             # func1: fetch name change log
@@ -161,4 +160,7 @@ def soup_parse_change_hist(soup:BeautifulSoup):
 
 
 if __name__ ==  '__main__':
-    fetch2DB()
+    # fetch2DB()
+    ahf.auto_reprocess_dueto_ipblock(identifier='fetch_stock_change_record_from_qq',
+                                                                 func_to_call=fetch2DB,
+                                                                 wait_seconds=300)

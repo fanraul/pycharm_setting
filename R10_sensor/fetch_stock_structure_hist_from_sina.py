@@ -8,9 +8,11 @@ import re
 import time
 from datetime import datetime
 import os
-from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
-import R50_general.general_constants_funcs as gcf
-from R50_general.general_constants_funcs import logprint
+
+import R50_general.advanced_helper_funcs as ahf
+import R50_general.general_constants
+import R50_general.general_helper_funcs as gcf
+from R50_general.general_helper_funcs import logprint
 import R50_general.dfm_to_table_common as df2db
 import urllib.error
 
@@ -31,7 +33,7 @@ def fetch2DB(stockid:str = ''):
     dict_misc_pars['char_usage'] = 'STRC'
 
     # check whether db table is created.
-    table_name = gcf.dbtables['stock_structure_sina']
+    table_name = R50_general.general_constants.dbtables['stock_structure_sina']
     df2db.create_table_by_template(table_name,table_type='stock_date')
     dict_cols_cur = {'变动日期':'datetime',
                      '公告日期':'datetime',
@@ -66,7 +68,7 @@ def fetch2DB(stockid:str = ''):
     for index,row in dfm_stocks.iterrows():
         logprint('Processing stock %s' %row['Stock_ID'])
         # step1:parse webpage and get raw data
-        url_stock_structure = gcf.weblinks['stock_structure_sina'] %row['Stock_ID']
+        url_stock_structure = R50_general.general_constants.weblinks['stock_structure_sina'] % row['Stock_ID']
         # print(url_link)
         soup_stock_structure = gcf.get_webpage(url_stock_structure)
         dfm_stk_strc = soup_parse_stock_structure(soup_stock_structure)
@@ -207,35 +209,7 @@ def get_subsequent_tds_by_first_td_content(soup,key_tdnode:str)->list:
         ls_str_td.append(tag_td.string.strip() if tag_td.string else '')
     return ls_str_td[:]
 
-def auto_reprocess_dueto_ipblock(identifier:str):
-    # use a temp file to store the stockid processed
-    read_log_file = open('process_log_%s.txt' %identifier,'r')
-    append_log_file = open('process_log_%s.txt' %identifier,'a')
-    ls_stockids_processed = ["'%s'" %line.strip() for line in read_log_file.readlines()]
-    if ls_stockids_processed:
-        str_stockids_processed = ','.join(ls_stockids_processed)
-    else:
-        str_stockids_processed = "''"
-    # step2.1: get current stock list
-    dfm_stocks_to_process = df2db.get_cn_stocklist('',str_stockids_processed)
-    for index,row in dfm_stocks_to_process.iterrows():
-        try:
-            fetch2DB(row['Stock_ID'])
-            append_log_file.write(row['Stock_ID'] + '\n')
-        except (urllib.error.HTTPError,urllib.error.URLError):
-            append_log_file.close()
-            read_log_file.close()
-            logprint('Web scrapping exception raised, auto reprocess after 600 seconds. Current time is %s' %datetime.now())
-            time.sleep(600)
-            auto_reprocess_dueto_ipblock(identifier)
-            return
-
-    append_log_file.close()
-    read_log_file.close()
-    os.remove('process_log_%s.txt' %identifier)
-
 if __name__ == '__main__':
     # fetch2DB('600061')
-
     # fetch2DB()
-    auto_reprocess_dueto_ipblock(identifier='fetch_stock_structure_hist_from_sina')
+    ahf.auto_reprocess_dueto_ipblock(identifier='fetch_stock_structure_hist_from_sina', func_to_call= fetch2DB, wait_seconds= 600)

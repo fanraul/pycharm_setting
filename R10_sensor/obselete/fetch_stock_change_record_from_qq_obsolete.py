@@ -8,9 +8,10 @@ import re
 
 from datetime import datetime
 
+import R50_general.general_constants
 from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
-import R50_general.general_constants_funcs as gcf
-from R50_general.general_constants_funcs import logprint
+import R50_general.general_helper_funcs as gcf
+from R50_general.general_helper_funcs import logprint
 import R50_general.dfm_to_table_common as df2db
 
 """
@@ -55,9 +56,9 @@ def fetch2DB(mode:str = ''):
     dict_misc_pars_catg['char_usage'] = 'CATG'
 
     # check whether db table is created.
-    table_name = gcf.dbtables['name_hist_qq']
+    table_name = R50_general.general_constants.dbtables['name_hist_qq']
     df2db.create_table_by_template(table_name,table_type='stock_date')
-    table_name_concept = gcf.dbtables['category_qq']
+    table_name_concept = R50_general.general_constants.dbtables['category_qq']
     df2db.create_table_by_template(table_name_concept,table_type='stock_date_multi_value')
 
     # get db category list
@@ -70,7 +71,7 @@ def fetch2DB(mode:str = ''):
     for item in dfm_stocks['Stock_ID']:         # get column Stock_ID from dataframe
         # Step1: parsing webpage and produce stock list
         logprint('Processing stock:', item)
-        url_stock_profile = gcf.weblinks['stock_change_record_qq'] %{'stock_id':item}
+        url_stock_profile = R50_general.general_constants.weblinks['stock_change_record_qq'] % {'stock_id':item}
         soup_profile = gcf.get_webpage(url_stock_profile)
         if soup_profile:
             # func1: fetch name change log

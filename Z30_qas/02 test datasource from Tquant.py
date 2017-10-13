@@ -1,7 +1,7 @@
 import tquant.getdata as gt
 import tquant.myquant as mt
 from pandas import DataFrame as df
-import R50_general.general_constants_funcs as gcf
+import R50_general.general_helper_funcs as gcf
 import datetime
 
 

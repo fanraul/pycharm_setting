@@ -5,8 +5,8 @@ import numpy as np
 from datetime import datetime
 
 from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
-from R50_general.general_constants_funcs import logprint
-import R50_general.general_constants_funcs as gc
+from R50_general.general_helper_funcs import logprint
+import R50_general.general_helper_funcs as gc
 import R50_general.dfm_to_table_common as df2db
 
 import tquant.getdata as gt

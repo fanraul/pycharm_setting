@@ -8,13 +8,14 @@ import re
 
 from datetime import datetime
 
+import R50_general.general_constants
 from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
-import R50_general.general_constants_funcs as gcf
-from R50_general.general_constants_funcs import logprint
+import R50_general.general_helper_funcs as gcf
+from R50_general.general_helper_funcs import logprint
 import R50_general.dfm_to_table_common as df2db
 # TODO: current only handle China market category, will parse other market in future
 def fetch2DB():
-    url_category = gcf.weblinks['stock_category_qq']
+    url_category = R50_general.general_constants.weblinks['stock_category_qq']
     soup_category = gcf.get_webpage(url_category)
     # parse data like below:
     # <a class ="clk-mo-li" href="?id=bd021225" id="a-l-bd021225" title="广东自贸区" >  广东自贸区 </a>

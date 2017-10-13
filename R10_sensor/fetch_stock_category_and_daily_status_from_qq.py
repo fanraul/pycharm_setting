@@ -8,9 +8,10 @@ import re
 
 from datetime import datetime
 
+import R50_general.general_constants
 from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
-import R50_general.general_constants_funcs as gcf
-from R50_general.general_constants_funcs import logprint
+import R50_general.general_helper_funcs as gcf
+from R50_general.general_helper_funcs import logprint
 import R50_general.dfm_to_table_common as df2db
 
 timestamp = datetime.now()
@@ -19,7 +20,7 @@ timestamp = datetime.now()
 def fetch2DB():
 
 
-    url_catglist = gcf.weblinks['stock_category_w_detail_qq'][0]
+    url_catglist = R50_general.general_constants.weblinks['stock_category_w_detail_qq'][0]
 
     # t参数:代表不同的category类型
     # 01-腾讯行业
@@ -87,7 +88,7 @@ def fetch2DB():
 
     # 2.2 insert new stock category relationship into DB
     # create DB table and chars
-    table_name_concept = gcf.dbtables['stock_category_relation_qq']
+    table_name_concept = R50_general.general_constants.dbtables['stock_category_relation_qq']
     df2db.create_table_by_template(table_name_concept,table_type='stock_date_multi_value')
     # get chars for stock category
     dfm_db_chars_catg = df2db.get_chars('QQ', ['CATG'])
@@ -125,7 +126,7 @@ def fetch2DB():
 
     # 2.3 insert category daily detail into DB
     # create DB table and chars
-    table_name_catg_trans = gcf.dbtables['category_daily_trans_qq']
+    table_name_catg_trans = R50_general.general_constants.dbtables['category_daily_trans_qq']
     df2db.create_table_by_template(table_name_catg_trans,table_type='catg_date')
     # get chars for stock category trans
     dfm_db_chars_catgtrans = df2db.get_chars('QQ', ['CATG_TRANS'])
@@ -161,7 +162,7 @@ def parse_stock_under_catg(dfm_catgs:DataFrame) ->dict:
     dt_stkcatgs = {}
     for index,row in dfm_catgs.iterrows():
         catg_code = row['Catg_Reference']
-        url_catgstklist = gcf.weblinks['stock_category_w_detail_qq'][2] %{'catg_code':catg_code}
+        url_catgstklist = R50_general.general_constants.weblinks['stock_category_w_detail_qq'][2] % {'catg_code':catg_code}
         soup_stklst = gcf.get_webpage(url_catgstklist)
         list_data = re.findall("data:'(.*)'", str(soup_stklst))
 
@@ -187,7 +188,7 @@ def parse_stock_under_catg(dfm_catgs:DataFrame) ->dict:
 def parse_concept(ls_catgs:list):
     catgs_num = len(ls_catgs)
     str_catgs =','.join(ls_catgs)
-    url_catgdetail = gcf.weblinks['stock_category_w_detail_qq'][1] % {'catg_list': str_catgs}
+    url_catgdetail = R50_general.general_constants.weblinks['stock_category_w_detail_qq'][1] % {'catg_list': str_catgs}
     #print(url_catgdetail)
     soup_catg = gcf.get_webpage(url_catgdetail)
     # print(soup_catg)
