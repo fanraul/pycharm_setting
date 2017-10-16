@@ -209,7 +209,10 @@ def get_subsequent_tds_by_first_td_content(soup,key_tdnode:str)->list:
         ls_str_td.append(tag_td.string.strip() if tag_td.string else '')
     return ls_str_td[:]
 
+def auto_reprocess():
+    ahf.auto_reprocess_dueto_ipblock(identifier='fetch_stock_structure_hist_from_sina', func_to_call= fetch2DB, wait_seconds= 600)
+
 if __name__ == '__main__':
     # fetch2DB('600061')
     # fetch2DB()
-    ahf.auto_reprocess_dueto_ipblock(identifier='fetch_stock_structure_hist_from_sina', func_to_call= fetch2DB, wait_seconds= 600)
+    auto_reprocess()

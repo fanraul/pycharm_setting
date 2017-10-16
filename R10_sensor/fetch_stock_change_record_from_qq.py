@@ -158,9 +158,11 @@ def soup_parse_change_hist(soup:BeautifulSoup):
 
     return DataFrame(ls_changes)
 
-
-if __name__ ==  '__main__':
-    # fetch2DB()
+def auto_reprocess():
     ahf.auto_reprocess_dueto_ipblock(identifier='fetch_stock_change_record_from_qq',
                                                                  func_to_call=fetch2DB,
                                                                  wait_seconds=300)
+
+if __name__ ==  '__main__':
+    # fetch2DB()
+    auto_reprocess()
