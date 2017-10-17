@@ -19,7 +19,7 @@ import tquant.getdata as gt
 
 # global variable for log processing
 log = True
-log_folder = 'C:/00 RichMinds/log/'
+log_folder = 'C:/00_RichMinds/log/'
 log_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 log_file = ''
 log_job_name =''

@@ -1,3 +1,7 @@
+import sys
+# sys.path.append(r"C:\00_RichMinds\Github\RichMinds")
+print(sys.path)
+
 from datetime import datetime
 
 import R10_sensor.fetch_stock_fin_reports_from_tquant as fetch_stock_fin_reports_from_tquant
