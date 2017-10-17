@@ -317,15 +317,15 @@ def send_email(receiver, title, content, attachments):
     finally:
         server.quit()
 
-def send_daily_job_log(content:str,str_except:str = ''):
+def send_daily_job_log(content:str,flg_except:bool = False):
     receiver = 'fanraul@icloud.com;terry.fan@sparkleconsulting.com'
-    if str_except =='':
+    if not flg_except:
         title = '%s job log %s' %(log_job_name,datetime.now().date())
-        attachment = [log_file]
     else:
-        pass
+        title = 'Daily job %s %s failed, please review the attachment and error text!' %(log_job_name,datetime.now().date())
         # TODO: error handling
-    content= content
+    attachment = [log_file]
+    content = content
     send_email(receiver, title, content, attachment)
 
 def exception_handler():
