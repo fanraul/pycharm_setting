@@ -258,7 +258,8 @@ def get_last_trading_daytime(market_id:str='SH'):
 def send_email(receiver, title, content, attachments):
     From = "fanraul@163.com"
     To = receiver
-    server = smtplib.SMTP("smtp.163.com")
+    # server = smtplib.SMTP("smtp.163.com")
+    server = smtplib.SMTP_SSL("smtp.163.com")
     server.login("fanraul@163.com", "121357468@")  # 仅smtp服务器需要验证时
 
     # 构造MIMEMultipart对象做为根容器
@@ -364,7 +365,7 @@ if __name__ == "__main__":
     #     print(row,type(row))
 
     # 7.test for get_last_trading_day
-    print(get_last_trading_day())
+    # print(get_last_trading_day())
     # 8.test for func func_call_with_trace
     # dt_args_w_name={}
     # dt_args_w_name['sep'] = ','
@@ -372,8 +373,8 @@ if __name__ == "__main__":
     # func_call_with_trace(print_list_nice, [(1,2)]*1000000)
 
     # 8.test for send_email
-    # send_email('fanraul@icloud.com;terry.fan@sparkleconsulting.com', 'email test',
-    #            'this is a test for email attachement',
-    #            ['C:/00 RichMinds/Github/RichMinds/R10_sensor/tmp.xls','C:/00 RichMinds/Github/RichMinds/README.md'])
+    send_email('fanraul@icloud.com;terry.fan@sparkleconsulting.com', 'email test',
+               'this is a test for email attachement',
+               ['C:/00_RichMinds/Github/RichMinds/sensor_mainjob.py','C:/00_RichMinds/Github/RichMinds/README.md'])
 
 
