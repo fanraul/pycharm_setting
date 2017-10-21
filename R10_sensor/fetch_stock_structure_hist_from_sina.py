@@ -8,6 +8,7 @@ import re
 import time
 from datetime import datetime
 import os
+import gc
 
 import R50_general.advanced_helper_funcs as ahf
 import R50_general.general_constants
@@ -88,6 +89,7 @@ def fetch2DB(stockid:str = ''):
         df2db.load_dfm_to_db_by_mkt_stk_w_hist(market_id, row['Stock_ID'], dfm_fmt_stk_strc, table_name,
                                                dict_misc_pars,
                                                processing_mode='w_update')
+        gc.collect()
         # time.sleep(10)
 
 def process_duplicated_entries(dfm_stk_strc:DataFrame,stockid):
