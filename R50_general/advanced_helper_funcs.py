@@ -35,7 +35,7 @@ def auto_reprocess_dueto_ipblock(identifier:str,func_to_call,wait_seconds:int = 
             read_log_file.close()
             logprint('Web scrapping exception raised, auto reprocess after 600 seconds. Current time is %s' % datetime.now())
             time.sleep(wait_seconds)
-            auto_reprocess_dueto_ipblock(identifier)
+            auto_reprocess_dueto_ipblock(identifier,func_to_call,wait_seconds)
             return
 
     append_log_file.close()
