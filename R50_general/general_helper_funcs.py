@@ -25,7 +25,6 @@ log_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 log_file = ''
 log_file_inconsistency = ''
 log_job_name =''
-log_file_processing_progress = ''
 
 def logprint(*args, sep=' ',  end='\n', file=None, add_log_files = '' ):
     """
