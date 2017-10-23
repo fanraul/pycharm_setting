@@ -5,6 +5,7 @@ import os
 
 import R50_general.dfm_to_table_common as df2db
 from R50_general.general_helper_funcs import logprint
+from R50_general.general_helper_funcs import log_folder,log_job_name
 
 def auto_reprocess_dueto_ipblock(identifier:str,func_to_call,wait_seconds:int = 0):
     """
@@ -16,8 +17,12 @@ def auto_reprocess_dueto_ipblock(identifier:str,func_to_call,wait_seconds:int = 
     :return:
     """
     # use a temp file to store the stockid processed
-    append_log_file = open('process_log_%s.txt' %identifier,'a')   #先用a模式生成文件,再用r模式读取文件,否则会报找不到文件的错误
-    read_log_file = open('process_log_%s.txt' %identifier,'r')
+    if log_job_name == '':
+        log_file_progressed_stockids = 'process_log_%s.txt' %identifier
+    else:
+        log_file_progressed_stockids = log_folder + log_job_name + '_' + 'process_log_%s.txt' %identifier
+    append_log_file = open(log_file_progressed_stockids,'a')   #先用a模式生成文件,再用r模式读取文件,否则会报找不到文件的错误
+    read_log_file = open(log_file_progressed_stockids,'r')
     ls_stockids_processed = ["'%s'" %line.strip() for line in read_log_file.readlines()]
     if ls_stockids_processed:
         str_stockids_processed = ','.join(ls_stockids_processed)

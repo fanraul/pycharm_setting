@@ -6,6 +6,7 @@ import smtplib
 import time
 import urllib.error
 import urllib.request
+import http.client
 from datetime import datetime
 from email.mime.base import MIMEBase  # import MIMEBase
 from email.mime.text import MIMEText  # import MIMEText
@@ -24,6 +25,7 @@ log_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 log_file = ''
 log_file_inconsistency = ''
 log_job_name =''
+log_file_processing_progress = ''
 
 def logprint(*args, sep=' ',  end='\n', file=None, add_log_files = '' ):
     """
@@ -93,6 +95,11 @@ def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False):
         #     raise
         # logprint("Web page retry after %s..." %(time_wait+300))
         # get_webpage(weblink_str, time_wait + 300)
+    except http.client.RemoteDisconnected as e:
+        # TODO urgent
+        logprint('Exception http.client.RemoteDisconnected raised, Remote end closed connection without response')
+        raise e
+
     except Exception as e:
         logprint("Weblink %s open failed error unkown:" % weblink_str, e,type(e))
         raise
