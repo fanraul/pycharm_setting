@@ -45,7 +45,7 @@ def fetch2DB():
         logprint('New Category %s:%s added.' %(dt_type[type],catg))
     dfm_cur_catg = DataFrame(ls_dfm_catg)
     # get db category list
-    dfm_db_catg = df2db.get_stock_catg('QQ')
+    dfm_db_catg = df2db.get_catg('QQ')
     dfm_new_catg = gcf.dfm_A_minus_B(dfm_cur_catg,dfm_db_catg,['Catg_Origin','Catg_Type','Catg_Name'])
     # print(dfm_cur_catg ,dfm_db_catg ,dfm_new_catg,sep='\n')
     df2db.load_snapshot_dfm_to_db(dfm_new_catg,'ZCFG_category',w_timestamp=True)

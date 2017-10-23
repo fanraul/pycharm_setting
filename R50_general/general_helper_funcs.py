@@ -22,20 +22,36 @@ log = True
 log_folder = 'C:/00_RichMinds/log/'
 log_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 log_file = ''
+log_file_inconsistency = ''
 log_job_name =''
 
-def logprint(*args, sep=' ',  end='\n',  file=None ):
-    global log_file
+def logprint(*args, sep=' ',  end='\n', file=None, add_log_files = '' ):
+    """
+
+    :param args:
+    :param sep:
+    :param end:
+    :param file:
+    :param add_log_files:'I': update in general log file and inconsistency log file
+    :return:
+    """
+    global log_file,log_file_inconsistency
     if log:
         print(*args,sep=' ', end='\n', file=None)
         if log_file == '':
             log_file = log_folder +'tmp/templog'+log_timestamp+'.txt'
+            log_file_inconsistency = log_folder +'tmp/templog' + '_inconsistency_' +log_timestamp+'.txt'
+
         print(*args, sep=' ', end='\n', file= open(log_file,'a'))
+        if 'I' in add_log_files:
+            print(*args, sep=' ', end='\n', file=open(log_file_inconsistency, 'a'))
+
 
 def setup_log_file(jobname:str):
-    global log_file,log_job_name
+    global log_file,log_job_name,log_file_inconsistency
     log_job_name = jobname
     log_file = log_folder + jobname + '_' + log_timestamp + '.txt'
+    log_file_inconsistency = log_folder + jobname + '_inconsistency' + '_' + log_timestamp + '.txt'
 
 def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False):
     """
@@ -332,6 +348,15 @@ def send_daily_job_log(content:str,flg_except:bool = False):
 def exception_handler():
     # TODO finish exception handler
     pass
+
+def set_dict_misc_pars(char_origin,char_freq,allow_multiple,update_by,char_usage):
+    dict_misc_pars = {}
+    dict_misc_pars['char_origin'] = char_origin
+    dict_misc_pars['char_freq'] = char_freq
+    dict_misc_pars['allow_multiple'] = allow_multiple
+    dict_misc_pars['created_by'] = dict_misc_pars['update_by'] = update_by
+    dict_misc_pars['char_usage'] = char_usage
+    return dict_misc_pars.copy()
 
 if __name__ == "__main__":
     # print(get_cn_stocklist())

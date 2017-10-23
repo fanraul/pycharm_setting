@@ -91,9 +91,9 @@ def fetch2DB(stockid:str = ''):
                     df2db.add_new_chars_and_cols(dict_cols_cur,list(dfm_db_chars['Char_ID']),table_name,dict_misc_pars)
                     # step4: insert transaction data into transaction table
                     market_id = 'SH' if item.startswith('6') else 'SZ'
-                    df2db.load_dfm_to_db_by_mkt_stk_w_hist(market_id, item, dfm_item_name_changes, table_name,
-                                                           dict_misc_pars,
-                                                           processing_mode='w_update')
+                    df2db.load_dfm_to_db_single_value_by_mkt_stk_w_hist(market_id, item, dfm_item_name_changes, table_name,
+                                                                        dict_misc_pars,
+                                                                        processing_mode='w_update')
                 dfm_item_changes['Stock_ID'] = item
                 dfm_item_changes['Market_ID'] = 'SH' if item.startswith('6') else 'SZ'
                 ls_changes.append(dfm_item_changes)

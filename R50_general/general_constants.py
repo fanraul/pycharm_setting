@@ -7,6 +7,7 @@ weblinks = {
                                    'http://stock.gtimg.cn/data/index.php?appn=rank&t=pt%(catg_code)s/chr&p=1&o=0&l=9999&v=list_data'],
     'stock_structure_sina':'http://vip.stock.finance.sina.com.cn/corp/go.php/vCI_StockStructure/stockid/%s.phtml',
     'stock_core_concept_eastmoney':"http://emweb.securities.eastmoney.com/PC_HSF10/CoreConception/CoreConceptionAjax?code=%s",
+    'stock_shareholder_eastmoney':'http://emweb.securities.eastmoney.com/PC_HSF10/ShareholderResearch/ShareholderResearchAjax?code=%s',
 }
 
 
@@ -20,7 +21,13 @@ dbtables = {
     'category_daily_trans_qq': 'DD_category_daily_noauth_qq',
     'stock_structure_sina':'DD_stock_structure_sina',
     'stock_core_concept_eastmoney':'DD_stock_core_concept_eastmoney',
-    'stock_category_relation_eastmoney': 'DD_stock_category_assignment_eastmoney'
+    'stock_category_relation_eastmoney': 'DD_stock_category_assignment_eastmoney',  # TODO
+    'stock_shareholder_number_eastmony': 'DD_stock_shareholder_number_eastmoney',
+    'stock_top_ten_tradable_shareholder_eastmoney': 'DD_stock_top_ten_tradable_shareholder_eastmoney',
+    'stock_top_ten_shareholder_eastmoney':'DD_stock_top_ten_shareholder_eastmoney',
+    'stock_top_ten_shareholder_shares_changes_eastmoney':'DD_stock_top_ten_shareholder_shares_changes_eastmoney',
+    'stock_fund_shareholder_eastmoney':'DD_stock_fund_shareholder_eastmoney',
+    'stock_nontradable_shares_release_eastmoney':'DD_stock_nontradable_shares_release_eastmoney',
 }
 dbtemplate_stock_date = """
 CREATE TABLE [%(table)s](

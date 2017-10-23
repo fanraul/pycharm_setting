@@ -78,7 +78,7 @@ def fetch2DB_individual(item : str, dfm_db_chars):
 
         # step4: insert transaction data into transaction table
         market_id = 'SH' if item.startswith('6') else 'SZ'
-        df2db.load_dfm_to_db_by_mkt_stk_w_hist(market_id,item,dfm_fin,trans_table_name,dict_misc_pars,processing_mode = 'w_update')
+        df2db.load_dfm_to_db_single_value_by_mkt_stk_w_hist(market_id, item, dfm_fin, trans_table_name, dict_misc_pars, processing_mode ='w_update')
 
 
 if __name__ == '__main__':

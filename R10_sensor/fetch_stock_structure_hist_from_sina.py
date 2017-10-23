@@ -86,9 +86,9 @@ def fetch2DB(stockid:str = ''):
         process_duplicated_entries(dfm_fmt_stk_strc,row['Stock_ID'])
         gcf.dfmprint(dfm_fmt_stk_strc)
         market_id = 'SH' if row['Stock_ID'].startswith('6') else 'SZ'
-        df2db.load_dfm_to_db_by_mkt_stk_w_hist(market_id, row['Stock_ID'], dfm_fmt_stk_strc, table_name,
-                                               dict_misc_pars,
-                                               processing_mode='w_update')
+        df2db.load_dfm_to_db_single_value_by_mkt_stk_w_hist(market_id, row['Stock_ID'], dfm_fmt_stk_strc, table_name,
+                                                            dict_misc_pars,
+                                                            processing_mode='w_update')
         gc.collect()
         # time.sleep(10)
 
@@ -215,6 +215,6 @@ def auto_reprocess():
     ahf.auto_reprocess_dueto_ipblock(identifier='fetch_stock_structure_hist_from_sina', func_to_call= fetch2DB, wait_seconds= 600)
 
 if __name__ == '__main__':
-    # fetch2DB('600061')
+    #fetch2DB('600061')
     # fetch2DB()
     auto_reprocess()

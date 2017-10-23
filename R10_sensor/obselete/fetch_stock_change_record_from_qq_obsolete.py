@@ -62,7 +62,7 @@ def fetch2DB(mode:str = ''):
     df2db.create_table_by_template(table_name_concept,table_type='stock_date_multi_value')
 
     # get db category list
-    dfm_db_catg = df2db.get_stock_catg('QQ')
+    dfm_db_catg = df2db.get_catg('QQ')
     set_db_catg = df2db.dfm_value_to_set(dfm_db_catg,['Catg_Name'])
     print(set_db_catg)
 
@@ -92,9 +92,9 @@ def fetch2DB(mode:str = ''):
                     df2db.add_new_chars_and_cols(dict_cols_cur,list(dfm_db_chars['Char_ID']),table_name,dict_misc_pars)
                     # step4: insert transaction data into transaction table
                     market_id = 'SH' if item.startswith('6') else 'SZ'
-                    df2db.load_dfm_to_db_by_mkt_stk_w_hist(market_id, item, dfm_item_name_changes, table_name,
-                                                           dict_misc_pars,
-                                                           processing_mode='w_update')
+                    df2db.load_dfm_to_db_single_value_by_mkt_stk_w_hist(market_id, item, dfm_item_name_changes, table_name,
+                                                                        dict_misc_pars,
+                                                                        processing_mode='w_update')
                 dfm_item_changes['Stock_ID'] = item
                 dfm_item_changes['Market_ID'] = 'SH' if item.startswith('6') else 'SZ'
                 ls_changes.append(dfm_item_changes)
