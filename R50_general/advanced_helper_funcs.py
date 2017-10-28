@@ -6,6 +6,7 @@ import os
 import R50_general.dfm_to_table_common as df2db
 from R50_general.general_helper_funcs import logprint
 from R50_general.general_helper_funcs import log_folder,log_job_name
+import R50_general.general_constants as gc
 
 def auto_reprocess_dueto_ipblock(identifier:str,func_to_call,wait_seconds:int = 0):
     """
@@ -29,7 +30,7 @@ def auto_reprocess_dueto_ipblock(identifier:str,func_to_call,wait_seconds:int = 
     else:
         str_stockids_processed = "''"
     # step2.1: get current stock list
-    dfm_stocks_to_process = df2db.get_cn_stocklist('',str_stockids_processed)
+    dfm_stocks_to_process = df2db.get_cn_stocklist('',str_excluded_stockids=str_stockids_processed)
     for index,row in dfm_stocks_to_process.iterrows():
         try:
             func_to_call(row['Stock_ID'])
@@ -45,5 +46,53 @@ def auto_reprocess_dueto_ipblock(identifier:str,func_to_call,wait_seconds:int = 
 
     append_log_file.close()
     read_log_file.close()
-    os.remove('process_log_%s.txt' %identifier)
+    os.remove(log_file_progressed_stockids)
 
+def isJobRun(program_name:str,processed_set:set)-> bool:
+    # run or not based on the scheduler
+    schedule = gc.scheduleman.get(program_name,{})
+    if schedule:
+        if schedule['rule'] == 'W':
+            # 由于job每天晚上8点半才开始运行,有时12点后还在调试, 按UTC的时间,在第二天8点之前还算是昨天,可以仍然按照昨天的规则判断程序是否要执行.
+            weekday = datetime.utcnow().weekday()
+            if weekday in schedule['weekdays']:
+                flg_jobrun = True
+            else:
+                flg_jobrun = False
+        else:
+            assert 0==1," Prod_id %s schedule rule unknown!" %program_name
+    else:
+        assert 0==1," Prod_id %s doesn't exist in general_constants.py as parameter: scheduleman " %program_name
+
+    # run or not based on the processed list
+    if flg_jobrun:
+        if program_name in processed_set:
+            flg_jobrun = False
+
+    return flg_jobrun
+
+
+
+def func_call_as_job_with_trace(func_name,*func_args,dt_args_w_name = {},program_name:str,processed_set=set()):
+    if isJobRun(program_name,processed_set):
+        func_call_with_trace(func_name, *func_args, dt_args_w_name =dt_args_w_name, program_name=program_name)
+
+def func_call_with_trace(func_name,*func_args,dt_args_w_name = {},program_name:str = ''):
+    """
+    这个函数用于显示一个函数的开始执行和结束执行的日志并显示执行花费的时间(按秒显示)
+    :param func_name:
+    :param func_args:
+    :param dt_args_w_name:
+    :return:
+    """
+    start_time = datetime.now()
+    logprint('*********         Start function call %s.%s     ***********' % (program_name,
+                                                                              func_name.__name__))
+    # print(*func_args)
+    # print(**dt_args_w_name)
+    func_name(*func_args,**dt_args_w_name)
+    end_time = datetime.now()
+    time_spent = end_time-start_time
+    logprint('*********  End function call %s.%s, time spent: %d seconds  *************' % (program_name,
+                                                                                            func_name.__name__,
+                                                                                            time_spent.total_seconds()))

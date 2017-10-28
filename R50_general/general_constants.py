@@ -23,11 +23,11 @@ dbtables = {
     'stock_core_concept_eastmoney':'DD_stock_core_concept_eastmoney',
     'stock_category_relation_eastmoney': 'DD_stock_category_assignment_eastmoney',  # TODO
     'stock_shareholder_number_eastmony': 'DD_stock_shareholder_number_eastmoney',
-    'stock_top_ten_tradable_shareholder_eastmoney': 'DD_stock_top_ten_tradable_shareholder_eastmoney',
-    'stock_top_ten_shareholder_eastmoney':'DD_stock_top_ten_shareholder_eastmoney',
-    'stock_top_ten_shareholder_shares_changes_eastmoney':'DD_stock_top_ten_shareholder_shares_changes_eastmoney',
-    'stock_fund_shareholder_eastmoney':'DD_stock_fund_shareholder_eastmoney',
-    'stock_nontradable_shares_release_eastmoney':'DD_stock_nontradable_shares_release_eastmoney',
+    'stock_top_ten_tradable_shareholder_eastmoney': 'DD_stock_shareholder_top_ten_tradable_eastmoney',
+    'stock_top_ten_shareholder_eastmoney':'DD_stock_shareholder_top_ten_eastmoney',
+    'stock_top_ten_shareholder_shares_changes_eastmoney':'DD_stock_shareholder_top_ten_shares_changes_eastmoney',
+    'stock_fund_shareholder_eastmoney':'DD_stock_shareholder_fund_eastmoney',
+    'stock_nontradable_shares_release_eastmoney':'DD_stock_shareholder_nontradable_shares_release_eastmoney',
 }
 dbtemplate_stock_date = """
 CREATE TABLE [%(table)s](
@@ -93,3 +93,41 @@ CREATE TABLE [%(table)s](
 	[Trans_Datetime] ASC
 ))
 """
+
+
+# the job sheduler for background programs
+# key is the program name
+scheduleman = {
+    'fetch_stock_fin_reports_from_tquant':{
+        'rule':'W',
+        'weekdays':[4]  # Friday
+    } ,
+    'fetch_stocklist_from_Tquant':{
+        'rule': 'W',
+        'weekdays': [0, 1, 2, 3, 4]  # monday to Friday
+    },
+    'fetch_stock_category_and_daily_status_from_qq':{
+        'rule': 'W',
+        'weekdays': [0, 1, 2, 3, 4, 6]  # monday to Friday and Sunday
+    },
+    'fetch_stock_change_record_from_qq':{
+        'rule': 'W',
+        'weekdays': [4]  # Friday
+    },
+    'fetch_stock_core_concept_from_eastmoney':{
+        'rule': 'W',
+        'weekdays': [0, 1, 2, 3, 4, 6]  # monday to Friday and Sunday
+    },
+    'fetch_stock_structure_hist_from_sina':{
+        'rule': 'W',
+        'weekdays': [4]  # Friday
+    },
+    'fetch_stock_shareholder_from_eastmoney':{
+        'rule': 'W',
+        'weekdays': [0,2,4]  # Monday,wednesday,Friday
+    },
+
+}
+
+# the date which shouldn't run the job
+excluded_dates =['2018-1-1',]

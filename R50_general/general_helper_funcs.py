@@ -10,11 +10,14 @@ import http.client
 from datetime import datetime
 from email.mime.base import MIMEBase  # import MIMEBase
 from email.mime.text import MIMEText  # import MIMEText
+import re
 
+import numpy as np
 import pandas as pd
 import tushare as ts
 from bs4 import BeautifulSoup
 from pandas import DataFrame
+
 
 import tquant.getdata as gt
 
@@ -106,42 +109,64 @@ def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False):
 
 def dfm_col_type_conversion(dfm:DataFrame,index='',columns= {}, dateformat='%Y-%m-%d'):
     """
-    this function is a common function to convert the columns in dataframe as the requested data type
+    this function is a general function to convert the columns in dataframe as the requested data type, it can also handle
+    some general data conversion rule, such as '--' means None, but it shouldn't include some very specific rule(which should
+    be handled by web scraper program itself.
+    conversion rule includes:
+    1) general rule for treat the data source as None.(eg. '--'), Note,put None into dataframe doesn't mean the data type will
+       be None, there is no None in dataframe for number or datetime type, based on column data type, it will be converted to
+        np.nan or pd.NaT
+    2) for int type, convert float to int use round func. if u just use int(), then 1.99-> 1 or 2.
+    3) for datetime type, convert string format to datetime format based on the format parameter.
+    4) remove '万股' for float type,
     :param dfm:
     :param index: the data type of index column
     :param columns: a dict of the rquested data type of columns
     :param dateformat: for datetime type, what is the original date format for conversion
     :return:
     """
+    # TODO: for 万股 processing, mulitple 10000 and use bigint type instead.
+    def datetime_conversion(x):
+        if x!= None and x != '--' and x != '' and x!='1900-1-1' and x!='1900-01-01':
+            # print(x,type(x))
+            return datetime.strptime(x, dateformat)
+        else:
+            return None
 
+    def float_conversion(x):
+        if not x:
+            return x
+
+        if type(x) == type('a'):
+            if x == '--':
+                return None
+            elif len(x) > 2 and x[-2:] == '万股':
+                return float(x[:-2])
+        return float(x)
     #convert index
     if index == 'datetime':
         dfm['new_index_formated_999']= dfm.index.map(lambda x: datetime.strptime(x,dateformat))
         dfm.set_index('new_index_formated_999',inplace = True)
 
+    def int_conversion(i):
+        if pd.isnull(i) or i == '--' :
+            return None
+        if type(i) == str:
+            return int(i)
+        return(int(round(i,0)))
+
     for col in columns:
         if col in dfm.columns:
             new_type = columns[col]
             if new_type == 'datetime':
-                # ☆if no date is specified, put '1900-1-1' as non-sense date so that all date type field has value!
-                dfm[col] = dfm[col].map(lambda x: datetime.strptime(x,dateformat) if x != '--' and x != '' else datetime(1900,1,1))
+                # ☆if no date or '1900-1-1' is specified, put None means no data specified!
+                dfm[col] = dfm[col].map(datetime_conversion)
             elif 'varchar' in columns[col] or 'str' == columns[col]:
                 dfm[col] = dfm[col].astype('str')
             elif 'int' in columns[col]:
-                dfm[col] = dfm[col].map(lambda x: x if x != '--' else 0)
-                dfm[col] = dfm[col].astype('int')
-            elif 'float' in columns[col] or 'double' in columns[col]:
+                dfm[col] = dfm[col].map(int_conversion)
+            elif 'float' in columns[col] or 'double' or 'decimal' in columns[col]:
                 dfm[col] = dfm[col].map(float_conversion)
-
-
-def float_conversion(x):
-    if type(x) == type('a'):
-        if x == '--':
-            return 0.0
-        elif len(x) >2 and x[-2:] == '万股':
-            return float(x[:-2])
-
-    return float(x)
 
 def print_list_nice(ls_tmp):
     print('List content is shown as below:')
@@ -153,6 +178,12 @@ def dfmprint(*args, sep=' ',  end='\n',  file=None):
     pd.set_option('display.max_columns', None)
     pd.set_option('display.width', None)
     print(*args, sep=' ',  end='\n',  file=None)
+
+def isStrNumber(s:str):
+    if re.match('^[-+]?[0-9]+\.[0-9]+$',s):
+        return True
+    else:
+        return False
 
 def dfm_A_minus_B(A:DataFrame,B:DataFrame, key_cols:list)->DataFrame:
     """
@@ -192,7 +223,7 @@ def dfm_A_intersect_B(A:DataFrame,B:DataFrame, key_cols:list)->DataFrame:
     del dfm_merge_by_keycols['tmp_col_duplicated']
     return dfm_merge_by_keycols
 
-def dfm_value_to_set(dfm_data:DataFrame,cols:list) -> set:
+def dfm_value_to_set(dfm_data:DataFrame,cols:list,float_fix_decimal) -> set:
     """
     convert dfm values of column cols into one set, {(value of col1,value of col2,...),(value of col1,...),...} each
     tuple represent for one line of dfm
@@ -200,21 +231,35 @@ def dfm_value_to_set(dfm_data:DataFrame,cols:list) -> set:
     :param cols:
     :return:
     """
+    def format_dfm_value_before_compare(x):
+        # rule1: #将浮点数按固定进度(default位4位小数点转换成str类型.
+        # rule2: #convert different types of None (pd.NaT, np.nan) to python None
+        if isinstance(x, float) or isinstance(x, np.float32) or isinstance(x, np.float64) :
+            return ('%.' + str(float_fix_decimal) + 'f') % x
+        elif pd.isnull(x):
+            return None
+        else:
+            return x
+
     ls_values =[]
     # check dfm_data is Series or Dataframe type
     # if Series:
     if isinstance(dfm_data,pd.Series):
-        ls_values.append(tuple(dfm_data[cols]))
+        #将浮点数按固定进度(default位4位小数点转换成str类型.
+        row_float_formated = [format_dfm_value_before_compare(x) for x in dfm_data[cols]]
+        ls_values.append(tuple(row_float_formated))
     # if Dataframe
     elif isinstance(dfm_data,pd.DataFrame):
         for id in range(len(dfm_data)):
-            ls_values.append(tuple(dfm_data.iloc[id][cols]))
+            # 将浮点数按固定进度(default位4位小数点转换成str类型.
+            row_float_formated = [format_dfm_value_before_compare(x) for x in dfm_data.iloc[id][cols]]
+            ls_values.append(tuple(row_float_formated))
     else:
         assert 0==1,'dfm_value_to_set parameter is not a type of Dataframe or Series!'
     # print(ls_values)
-    return set(tuple(ls_values))
+    return set(ls_values)
 
-def setdif_dfm_A_to_B(dfm1,dfm2,cols:list)->set:
+def setdif_dfm_A_to_B(dfm1,dfm2,cols:list,float_fix_decimal)->set:
     """
     return a set of difference for dfm1 to dfm2,meaning in dfm1 but not in dfm2 based on the column name list cols
     the set contains touples, each touple represent one line which in dfm1 but not in dfm2
@@ -222,29 +267,11 @@ def setdif_dfm_A_to_B(dfm1,dfm2,cols:list)->set:
     :param dfm2:
     :return:
     """
-    set_dfm1_values = dfm_value_to_set(dfm1, cols)
-    set_dfm2_values = dfm_value_to_set(dfm2, cols)
+    set_dfm1_values = dfm_value_to_set(dfm1, cols,float_fix_decimal)
+    set_dfm2_values = dfm_value_to_set(dfm2, cols,float_fix_decimal)
 
     set_dif = set_dfm1_values - set_dfm2_values
     return set_dif
-
-def func_call_with_trace(func_name,*func_args,dt_args_w_name = {},program_name:str = ''):
-    """
-    这个函数用于显示一个函数的开始执行和结束执行的日志并显示执行花费的时间(按秒显示)
-    :param func_name:
-    :param func_args:
-    :param dt_args_w_name:
-    :return:
-    """
-    start_time = datetime.now()
-    logprint('*********         Start function call %s.%s     ***********' % (program_name,
-                                                                              func_name.__name__))
-    func_name(*func_args,**dt_args_w_name)
-    end_time = datetime.now()
-    time_spent = end_time-start_time
-    logprint('*********  End function call %s.%s, time spent: %d seconds  *************' % (program_name,
-                                                                                            func_name.__name__,
-                                                                                            time_spent.total_seconds()))
 
 def get_market_calendar(startdate,enddate,market_id:str='') ->list:
     """
@@ -341,7 +368,7 @@ def send_email(receiver, title, content, attachments):
         server.quit()
 
 def send_daily_job_log(content:str,flg_except:bool = False):
-    receiver = 'fanraul@icloud.com;terry.fan@sparkleconsulting.com'
+    receiver = 'terry.fan@sparkleconsulting.com;fanraul@icloud.com'
     if not flg_except:
         title = '%s job log %s' %(log_job_name,datetime.now().date())
     else:
@@ -404,8 +431,11 @@ if __name__ == "__main__":
     # func_call_with_trace(print_list_nice, [(1,2)]*1000000)
 
     # 8.test for send_email
-    send_email('fanraul@icloud.com;terry.fan@sparkleconsulting.com', 'email test',
-               'this is a test for email attachement',
-               ['C:/00_RichMinds/Github/RichMinds/sensor_mainjob.py','C:/00_RichMinds/Github/RichMinds/README.md'])
+    # send_email('terry.fan@sparkleconsulting.com;fanraul@icloud.com', 'email test',
+    #            'this is a test for email attachement',
+    #            ['C:/00_RichMinds/Github/RichMinds/sensor_mainjob.py','C:/00_RichMinds/Github/RichMinds/README.md'])
+
+    print(isStrNumber('123.3'))
+    print(isStrNumber('123.3.4'))
 
 

@@ -23,7 +23,7 @@ it extract below 3 types datas
 -stock category info (obsolete,data source quality not good!!)
 """
 
-mode = ''
+mode = 'update_log'
 
 def fetch2DB(stockid:str = ''):
     """
