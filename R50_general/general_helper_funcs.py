@@ -374,7 +374,7 @@ def send_daily_job_log(content:str,flg_except:bool = False):
     else:
         title = 'Daily job %s %s failed, please review the attachment and error text!' %(log_job_name,datetime.now().date())
         # TODO: error handling
-    attachment = [log_file]
+    attachment = [log_file,log_file_inconsistency]
     content = content
     send_email(receiver, title, content, attachment)
 
