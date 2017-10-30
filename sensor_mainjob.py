@@ -6,13 +6,13 @@ from datetime import datetime
 import traceback
 import os
 
-import R10_sensor.fetch_stock_fin_reports_from_tquant as fetch_stock_fin_reports_from_tquant
-import R10_sensor.fetch_stocklist_from_Tquant as fetch_stocklist_from_Tquant
-import R10_sensor.fetch_stock_category_and_daily_status_from_qq as fetch_stock_category_and_daily_status_from_qq
-import R10_sensor.fetch_stock_change_record_from_qq as fetch_stock_change_record_from_qq
-import R10_sensor.fetch_stock_core_concept_from_eastmoney as fetch_stock_core_concept_from_eastmoney
-import R10_sensor.fetch_stock_structure_hist_from_sina as fetch_stock_structure_hist_from_sina
-import R10_sensor.fetch_stock_shareholder_from_eastmoney as fetch_stock_shareholder_from_eastmoney
+from R10_sensor import (fetch_stock_fin_reports_from_tquant,
+                        fetch_stocklist_from_Tquant ,
+                        fetch_stock_category_and_daily_status_from_qq ,
+                        fetch_stock_change_record_from_qq ,
+                        fetch_stock_core_concept_from_eastmoney ,
+                        fetch_stock_structure_hist_from_sina ,
+                        fetch_stock_shareholder_from_eastmoney, )
 
 import R50_general.general_helper_funcs as gcf
 import R50_general.advanced_helper_funcs as ahf
