@@ -5,13 +5,15 @@ import numpy as np
 from datetime import datetime
 
 import R50_general.general_constants
-from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
 from R50_general.general_helper_funcs import logprint
-import R50_general.general_helper_funcs as gc
+import R50_general.general_helper_funcs as gcf
 import R50_general.dfm_to_table_common as df2db
+import R50_general.advanced_helper_funcs as ahf
+
 
 import tquant.getdata as gt
 
+global_module_name = 'fetch_stock_fin_reports_from_tquant'
 
 """
 this report use tquant module's get_financial func to get balance report and store them into sql server
@@ -28,12 +30,10 @@ once program get this 3 reports, it call general funcs in dfm_to_table_common to
 #TODO: 2.如何获得当前的程序名称作为创建人或修改者
 
 
-def fetch2DB():
+def fetch2DB(stockid:str = ''):
     # init step
     # step2.1: get current stock list
-    dfm_stocks = df2db.get_cn_stocklist()
-    #only for test purpose,use one stock to test.
-    # dfm_stocks = df2db.get_cn_stocklist('601288')
+    dfm_stocks = df2db.get_cn_stocklist(stockid)
 
     # step2:loop at stock list and fetch and save to DB
     for item in dfm_stocks['Stock_ID']:         # get column Stock_ID from dataframe
@@ -81,8 +81,9 @@ def fetch2DB_individual(item : str, dfm_db_chars):
         df2db.load_dfm_to_db_single_value_by_mkt_stk_w_hist(market_id, item, dfm_fin, trans_table_name, dict_misc_pars, processing_mode ='w_update')
 
 
+def auto_reprocess():
+    ahf.auto_reprocess_dueto_ipblock(identifier=global_module_name, func_to_call=fetch2DB, wait_seconds=60)
+
 if __name__ == '__main__':
-    starttime = datetime.now()
-    fetch2DB()
-    endtime = datetime.now()
-    print('The time spent is :', endtime-starttime)
+    # fetch2DB('300692')
+    auto_reprocess()

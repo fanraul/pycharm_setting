@@ -20,10 +20,11 @@ from pandas import DataFrame
 
 
 import tquant.getdata as gt
+from R50_general import general_constants as gc
 
 # global variable for log processing
 log = True
-log_folder = 'C:/00_RichMinds/log/'
+log_folder = gc.Global_Job_Log_Base_Direction
 log_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 log_file = ''
 log_file_inconsistency = ''
@@ -374,7 +375,7 @@ def send_daily_job_log(content:str,flg_except:bool = False):
     else:
         title = 'Daily job %s %s failed, please review the attachment and error text!' %(log_job_name,datetime.now().date())
         # TODO: error handling
-    attachment = [log_file,log_file_inconsistency]
+    attachment = [log_file,log_file_inconsistency] if log_file_inconsistency and os.path.exists(log_file_inconsistency) else [log_file]
     content = content
     send_email(receiver, title, content, attachment)
 
@@ -431,11 +432,11 @@ if __name__ == "__main__":
     # func_call_with_trace(print_list_nice, [(1,2)]*1000000)
 
     # 8.test for send_email
-    # send_email('terry.fan@sparkleconsulting.com;fanraul@icloud.com', 'email test',
-    #            'this is a test for email attachement',
-    #            ['C:/00_RichMinds/Github/RichMinds/sensor_mainjob.py','C:/00_RichMinds/Github/RichMinds/README.md'])
+    send_email('terry.fan@sparkleconsulting.com;fanraul@icloud.com', 'email test',
+               'this is a test for email attachement',
+               ['C:/00_RichMinds/Github/RichMinds/sensor_mainjob.py','C:/00_RichMinds/Github/RichMinds/README.md'])
 
-    print(isStrNumber('123.3'))
-    print(isStrNumber('123.3.4'))
+    # print(isStrNumber('123.3'))
+    # print(isStrNumber('123.3.4'))
 
 

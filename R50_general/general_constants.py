@@ -1,3 +1,5 @@
+Global_Job_Log_Base_Direction = 'C:/00_RichMinds/log/'
+
 weblinks = {
     'stock_list_easymoney': 'http://quote.eastmoney.com/stocklist.html',   # obselete
     'stock_change_record_qq': 'http://stock.finance.qq.com/corp1/profile.php?zqdm=%(stock_id)s',
