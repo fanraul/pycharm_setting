@@ -40,7 +40,7 @@ if __name__ == '__main__':
     processed_prog_file = 'sensor_mainjob_processed_program_log.txt'
     append_processed_prog_file = open(processed_prog_file, 'a')  # 先用a模式生成文件,再用r模式读取文件,否则会报找不到文件的错误
     read_processed_prog_file_file = open(processed_prog_file, 'r')
-    processed_set = ("'%s'" % line.strip() for line in read_processed_prog_file_file.readlines())
+    processed_set = {line.strip() for line in read_processed_prog_file_file.readlines()}
 
     try:
         # step 10: update stock list
