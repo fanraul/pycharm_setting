@@ -17,6 +17,7 @@ from R10_sensor import (fetch_stock_fin_reports_from_tquant,
 import R50_general.general_helper_funcs as gcf
 import R50_general.advanced_helper_funcs as ahf
 
+
 def append_processed_prog_log(program_name:str):
     append_processed_prog_file.write(program_name + '\n')
     append_processed_prog_file.flush()  # 由于缓冲，字符串可能实际上没有出现在该文件中，直到调用flush()或close()方法被调用.
@@ -37,7 +38,7 @@ if __name__ == '__main__':
         pass
 
     # a log file to record the program successfully run in one job run
-    processed_prog_file = 'sensor_mainjob_processed_program_log.txt'
+    processed_prog_file = gcf.log_folder + 'sensor_mainjob_processed_program_log.txt'
     append_processed_prog_file = open(processed_prog_file, 'a')  # 先用a模式生成文件,再用r模式读取文件,否则会报找不到文件的错误
     read_processed_prog_file_file = open(processed_prog_file, 'r')
     processed_set = {line.strip() for line in read_processed_prog_file_file.readlines()}
