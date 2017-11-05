@@ -1,5 +1,8 @@
 from sqlalchemy import create_engine
 
+# remote database
+# DB_connection_string = 'mssql+pyodbc://Richmind:121357468@Richmind_Remote'
+# local database
 DB_connection_string = 'mssql+pyodbc://Richmind:121357468@Richmind'
 
 class Dbconnectionmanager:

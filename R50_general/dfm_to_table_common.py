@@ -262,7 +262,7 @@ def load_dfm_to_db_single_value_by_key_cols_w_hist(dt_key_cols:dict,dfm_data:Dat
                             if dif > 1. / 10**float_fix_decimal:
                                 ls_upt_cols.append(special_process_col_name(tmp_colname) + '=?')
                                 # convert numpy type to stanard data type if required.
-                                ls_upt_pars.append(numpy_num_type_conversion(dfm_data.loc[ts_id][col]))
+                                ls_upt_pars.append(pandas_numpy_type_convert_to_standard(dfm_data.loc[ts_id][col]))
                                 logprint("Update %s %s Period %s Column %s from %s to %s"
                                          % (table_name,dt_key_cols, ts_id, tmp_colname, dfm_db_data.loc[ts_id][tmp_colname],
                                             dfm_data.loc[ts_id][col]))
@@ -325,13 +325,12 @@ def dbtype_aligned_format(series_tmp):
     # numpy.nan or pd.NaT -> None  (use pd.isnull() to check)
     ls_par = []
     for par in series_tmp:
-        if not pd.isnull(par):
-            ls_par.append(numpy_num_type_conversion(par))
-        else:
-            ls_par.append(None)
+        ls_par.append(pandas_numpy_type_convert_to_standard(par))
     return ls_par
 
-def numpy_num_type_conversion(par):
+def pandas_numpy_type_convert_to_standard(par):
+    if pd.isnull(par):
+        return None
     if isinstance(par, np.int32) or isinstance(par, np.int64):
         return int(par)
     elif isinstance(par, np.float32) or isinstance(par, np.float64):
@@ -402,11 +401,11 @@ def load_dfm_to_db_multi_value_by_key_cols_w_hist(
                 set_dif_db2cur = gcf.setdif_dfm_A_to_B(sub_dfm_db_data, sub_dfm_data, dfm_data.columns,float_fix_decimal)
                 if len(set_dif_cur2db) > 0:
                     logprint(
-                        'Inconsistency found with DB %s update! Entry %s Period %s new value set appears: %s' % (table_name,
+                        'Inconsistency found with db %s update! Entry %s Period %s new value set shows: %s' % (table_name,
                         dt_key_cols,cur_uni_tsdate.date(),set_dif_cur2db),add_log_files='I')
                 if len(set_dif_db2cur) > 0:
                     logprint(
-                        'Inconsistency found with DB %s update! Entry %s Period %s old value set disappears: %s' % (table_name,
+                        'Inconsistency found with db %s update! Entry %s Period %s old value set gones: %s' % (table_name,
                         dt_key_cols, cur_uni_tsdate.date(),set_dif_db2cur),add_log_files='I')
                 if len(set_dif_cur2db) == 0 and len(set_dif_db2cur) == 0:
                     continue
@@ -484,11 +483,11 @@ def load_dfm_to_db_multi_value_by_key_cols_cur(dt_key_cols:dict,dfm_data:DataFra
         set_dif_db2cur = gcf.setdif_dfm_A_to_B(set_latest_db_values,dfm_data,dfm_data.columns,float_fix_decimal)
         # TODO: error handling
         if len(set_dif_cur2db) > 0:
-            logprint('Inconsistency found for multiple fetchs in one day! Entry %s new value set appears: %s' %(dt_key_cols,set_dif_cur2db),
+            logprint('Inconsistency found for multiple fetchs of db %s in one day! Entry %s new value set shows: %s' %(table_name,dt_key_cols,set_dif_cur2db),
                      add_log_files='I')
             logprint('No DB update happens in this case, please manually handle it',add_log_files='I')
         if len(set_dif_db2cur) > 0:
-            logprint('Inconsistency found for multiple fetchs in one day! Entry %s old value set disappears: %s' %(dt_key_cols,set_dif_db2cur),
+            logprint('Inconsistency found for multiple fetchs of db %s in one day! Entry %s old value set gones: %s' %(table_name,dt_key_cols,set_dif_db2cur),
                      add_log_files='I')
             logprint('No DB update happens in this case, please manually handle it',add_log_files='I')
         return

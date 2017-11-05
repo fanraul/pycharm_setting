@@ -22,11 +22,14 @@ def append_processed_prog_log(program_name:str):
     append_processed_prog_file.write(program_name + '\n')
     append_processed_prog_file.flush()  # 由于缓冲，字符串可能实际上没有出现在该文件中，直到调用flush()或close()方法被调用.
 
+
 if __name__ == '__main__':
     gcf.setup_log_file('sensor_mainjob')
     # for job run, use utctime instead of local time so that before 8AM job rule applied as yesterday
     # 由于job每天晚上8点半才开始运行,有时12点后还在调试, 按UTC的时间,在第二天8点之前还算是昨天,可以仍然按照昨天的规则判断程序是否要执行.
-    weekday = datetime.utcnow().weekday()
+
+    #如果要再周六重新运行程序,但是执行的是周五的job,则需要到getweekday函数中,overwrite weekday变量为4.
+    weekday = ahf.getweekday()
     # in python, Monday is 0,Sunday is 6
     if weekday > 3:
         weekly_update = True
@@ -60,7 +63,7 @@ if __name__ == '__main__':
         append_processed_prog_log(program_name='fetch_stock_core_concept_from_eastmoney')
 
         # step 40: update 3 fin reports
-        ahf.func_call_as_job_with_trace(fetch_stock_fin_reports_from_tquant.fetch2DB,
+        ahf.func_call_as_job_with_trace(fetch_stock_fin_reports_from_tquant.auto_reprocess,
                                         program_name='fetch_stock_fin_reports_from_tquant',processed_set=processed_set)
         append_processed_prog_log(program_name='fetch_stock_fin_reports_from_tquant')
 

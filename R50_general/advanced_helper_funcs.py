@@ -1,5 +1,6 @@
 import time
 import urllib.error
+import json.decoder
 from datetime import datetime
 import os
 
@@ -8,6 +9,16 @@ from R50_general.general_helper_funcs import logprint
 # from R50_general.general_helper_funcs import log_folder,log_job_name
 import R50_general.general_helper_funcs as ghf
 import R50_general.general_constants as gc
+
+
+def getweekday():
+    weekday = datetime.utcnow().weekday()
+
+    # overwrite weekday as certain date for re-processing only***********************
+    # for example, reprocess at Saturday and assume it it Friday.
+    # weekday = 4
+    #********************************************************************************
+    return weekday
 
 def auto_reprocess_dueto_ipblock(identifier:str,func_to_call,wait_seconds:int = 0):
     """
@@ -42,7 +53,14 @@ def auto_reprocess_dueto_ipblock(identifier:str,func_to_call,wait_seconds:int = 
         except (urllib.error.HTTPError,urllib.error.URLError):
             append_log_file.close()
             read_log_file.close()
-            logprint('Web scrapping exception raised, auto reprocess after 600 seconds. Current time is %s' % datetime.now())
+            logprint('Web scrapping exception raised, auto reprocess after %s seconds. Current time is %s' % (wait_seconds,datetime.now()))
+            time.sleep(wait_seconds)
+            auto_reprocess_dueto_ipblock(identifier,func_to_call,wait_seconds)
+            return
+        except json.decoder.JSONDecodeError:
+            append_log_file.close()
+            read_log_file.close()
+            logprint('JSONDecode exception raised, auto reprocess after %s seconds. Current time is %s' % (wait_seconds,datetime.now()))
             time.sleep(wait_seconds)
             auto_reprocess_dueto_ipblock(identifier,func_to_call,wait_seconds)
             return
@@ -57,7 +75,7 @@ def isJobRun(program_name:str,processed_set:set)-> bool:
     if schedule:
         if schedule['rule'] == 'W':
             # 由于job每天晚上8点半才开始运行,有时12点后还在调试, 按UTC的时间,在第二天8点之前还算是昨天,可以仍然按照昨天的规则判断程序是否要执行.
-            weekday = datetime.utcnow().weekday()
+            weekday = getweekday()
             if weekday in schedule['weekdays']:
                 flg_jobrun = True
             else:
