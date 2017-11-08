@@ -12,7 +12,8 @@ from R10_sensor import (fetch_stock_fin_reports_from_tquant,
                         fetch_stock_change_record_from_qq ,
                         fetch_stock_core_concept_from_eastmoney ,
                         fetch_stock_structure_hist_from_sina ,
-                        fetch_stock_shareholder_from_eastmoney, )
+                        fetch_stock_shareholder_from_eastmoney,
+                        fetch_stock_company_general_info_from_eastmoney,)
 
 import R50_general.general_helper_funcs as gcf
 import R50_general.advanced_helper_funcs as ahf
@@ -52,6 +53,11 @@ if __name__ == '__main__':
                                         program_name='fetch_stocklist_from_Tquant',processed_set=processed_set)
         append_processed_prog_log(program_name='fetch_stocklist_from_Tquant')
 
+        # step 11: update stock company general info, 股本信息.
+        ahf.func_call_as_job_with_trace(fetch_stock_company_general_info_from_eastmoney.auto_reprocess,
+                                        program_name='fetch_stock_company_general_info_from_eastmoney',processed_set=processed_set)
+        append_processed_prog_log(program_name='fetch_stock_company_general_info_from_eastmoney')
+
         # step 20: update qq category info
         ahf.func_call_as_job_with_trace(fetch_stock_category_and_daily_status_from_qq.fetch2DB,
                                  program_name='fetch_stock_category_and_daily_status_from_qq',processed_set=processed_set)
@@ -81,6 +87,8 @@ if __name__ == '__main__':
         ahf.func_call_as_job_with_trace(fetch_stock_structure_hist_from_sina.auto_reprocess,
                                         program_name='fetch_stock_structure_hist_from_sina',processed_set=processed_set)
         append_processed_prog_log(program_name='fetch_stock_structure_hist_from_sina')
+
+
 
     except:
         append_processed_prog_file.close()

@@ -54,7 +54,7 @@ def get_all_stocklist(stock :str ="") -> DataFrame:
     return dfm_stocks
 
 
-def get_chars(origin = '',usages = [],freq='D',charids=[]) ->DataFrame:
+def get_chars(origin = '',usages = [],freq=['D'],charids=[]) ->DataFrame:
     """
     获得股票的属性chars清单
     :param origin:
@@ -67,7 +67,7 @@ def get_chars(origin = '',usages = [],freq='D',charids=[]) ->DataFrame:
     ls_sel_str =[]
     sel_str_orgin = "Char_Origin = '%s'" %origin if origin else ''
     sel_str_usage = "Char_Usage in ('%s')" %"','".join(usages) if usages else ''
-    sel_str_freq = "Char_Freq = '%s'" %freq if freq else ''
+    sel_str_freq = "Char_Freq in ('%s')" %"','".join(freq) if freq else ''
     sel_str_charids = "Char_ID in ('%s')" %"','".join(charids) if charids else ''
     sel_str = 'select * from ZCFG_character %s' %concatenate_sel_str(sel_str_orgin,sel_str_usage,sel_str_freq,sel_str_charids)
 #    print(sel_str)
@@ -259,7 +259,7 @@ def load_dfm_to_db_single_value_by_key_cols_w_hist(dt_key_cols:dict,dfm_data:Dat
                                 dif = abs(dfm_data.loc[ts_id][col]- dfm_db_data.loc[ts_id][tmp_colname])
                             except:
                                 dif = 1
-                            if dif > 1. / 10**float_fix_decimal:
+                            if dif >= 1. / 10**float_fix_decimal:
                                 ls_upt_cols.append(special_process_col_name(tmp_colname) + '=?')
                                 # convert numpy type to stanard data type if required.
                                 ls_upt_pars.append(pandas_numpy_type_convert_to_standard(dfm_data.loc[ts_id][col]))
@@ -436,6 +436,22 @@ def load_dfm_to_db_multi_value_by_key_cols_w_hist(
                          add_log_files='I')
                 logprint('No DB update happens in this case, please manually handle it',add_log_files='I')
 
+def load_dfm_to_db_multi_value_by_mkt_stk_cur(market_id,item,dfm_data:DataFrame,table_name:str,dict_misc_pars:dict,
+                                              process_mode = 'w_check',float_fix_decimal = 4):
+    """
+    本函数用于多值属性的char的当前数据更新.
+    :param market_id:
+    :param item:
+    :param dfm_data:
+    :param table_name:
+    :param dict_misc_pars:
+    :return:
+    """
+    # load DB contents
+
+    dt_key_cols = {'Market_ID':market_id,'Stock_ID':item}
+    load_dfm_to_db_multi_value_by_key_cols_cur(dt_key_cols,dfm_data,table_name,dict_misc_pars,process_mode,float_fix_decimal)
+
 
 def load_dfm_to_db_multi_value_by_key_cols_cur(dt_key_cols:dict,dfm_data:DataFrame,table_name:str,dict_misc_pars:dict,
                                               process_mode,float_fix_decimal):
@@ -543,10 +559,38 @@ def insert_multi_value_dfm_to_db_by_key_cols_transdate(dt_key_cols:dict,trans_da
         except:
             raise
 
-def load_dfm_to_db_multi_value_by_mkt_stk_cur(market_id,item,dfm_data:DataFrame,table_name:str,dict_misc_pars:dict,
-                                              process_mode = 'w_check',float_fix_decimal = 4):
+
+def load_dfm_to_db_single_value_by_mkt_stk_cur(market_id,item,dfm_data:DataFrame,table_name:str,dict_misc_pars:dict,
+                                               process_mode:str='w_check',float_fix_decimal = 4):
     """
-    本函数用于多值属性的char的当前数据更新.
+    针对单个market和stock组合,char为单值的当前最新记录处理,
+    1) 如果last_trading_day已经在db中存在了,直接进行覆盖.
+    2) 当last_trading_day在db中不存在,则会更新process_model决定是直接更新还是有选择性的更新
+        2.1) process_model = 'w_check',则会检dfm中的数据是否和最近的DB记录是否一致,不一致才进行更新,这种模式适合非每天更新的数据,比如
+             股票所属板块.
+        2.2) 非以上情况,dfm直接更新db,这种模式适合每天都必须更新的数据,比如股票每日的交易信息
+    :param market_id:
+    :param item:
+    :param dfm_data: 只需包含当前获得的具体char值,无需Trans_Datetime的信息,函数会自动取last transaction day
+    :param table_name:
+    :param dict_misc_pars:
+    :param process_mode:
+    :return:
+    """
+
+    dt_key_cols = {'Market_ID': market_id, 'Stock_ID': item}
+    load_dfm_to_db_single_value_by_key_cols_cur(dt_key_cols, dfm_data, table_name, dict_misc_pars, process_mode,
+                                               float_fix_decimal)
+
+
+def load_dfm_to_db_single_value_by_key_cols_cur(dt_key_cols:dict,dfm_data:DataFrame,table_name:str,dict_misc_pars:dict,
+                                              process_mode,float_fix_decimal):
+    """
+    本函数用于单值属性的char的当前数据更新.
+    1) 如果处理模式为'w_check',则会检dfm中的数据是否和最近的DB记录是否一致,不一致才进行更新,这种模式适合非每天更新的数据,比如
+        股票所属板块.
+    2) 非以上情况, 则对dfm增加(key col:'Trans_Datetime',值为last_trading_day),然后使用该dfm直接更新db,这种模式适合每天都必须更新的数据,
+        比如股票每日的交易信息,效果是不存在则insert,存在则update.(无inconsistency检查).
     :param market_id:
     :param item:
     :param dfm_data:
@@ -554,31 +598,87 @@ def load_dfm_to_db_multi_value_by_mkt_stk_cur(market_id,item,dfm_data:DataFrame,
     :param dict_misc_pars:
     :return:
     """
-    # load DB contents
+    if process_mode == 'w_check':
+        # load DB contents
+        timestamp = datetime.now()
 
-    dt_key_cols = {'Market_ID':market_id,'Stock_ID':item}
-    load_dfm_to_db_multi_value_by_key_cols_cur(dt_key_cols,dfm_data,table_name,dict_misc_pars,process_mode,float_fix_decimal)
+        ls_key_col_items = dt_key_cols.items()
+        ls_sel_key_cols = [ x[0] + ' = ?' for x in ls_key_col_items]   # ['Market_ID = ?','Stock_ID = ?']
+        ls_key_cols_value = [x[1] for x in ls_key_col_items]       # ['SH','600000']
 
-def load_dfm_to_db_single_value_by_mkt_stk_cur(market_id,item,dfm_data:DataFrame,table_name:str,dict_misc_pars:dict,processing_mode:str='w_update'):
-    """
-    针对单个market和stock组合,char为单值的当前最新记录处理,
-    :param market_id:
-    :param item:
-    :param dfm_data: 只需包含当前获得的具体char值,无需Trans_Datetime的信息,函数会自动取last transaction day
-    :param table_name:
-    :param dict_misc_pars:
-    :param processing_mode:
-    :return:
-    """
-    dfm_data['Market_ID'] = market_id
-    dfm_data['Stock_ID'] = item
-    key_cols = ['Market_ID','Stock_ID']
-    load_dfm_to_db_cur(dfm_data,key_cols,table_name,dict_misc_pars,processing_mode)
-    pass
+        str_key_cols = ','.join([x[0] for x in ls_key_col_items])
+        str_sel_key_cols = ' and '.join(ls_sel_key_cols)
 
-def load_dfm_to_db_cur(dfm_cur_data:DataFrame,key_cols:list,table_name:str,dict_misc_pars:dict,processing_mode:str='w_update'):
+        last_trading_day = gcf.get_last_trading_day()
+        last_trading_daytime = datetime.strptime(str(last_trading_day), '%Y-%m-%d')
+        dfm_db_data = pd.read_sql_query("select * from %s where %s order by Trans_Datetime DESC" %(table_name,str_sel_key_cols)
+                                            , conn, params=tuple(ls_key_cols_value), index_col='Trans_Datetime')
+        # print(dfm_data)
+        # print(dfm_db_data)
+        if pd.Timestamp(last_trading_day) in dfm_db_data.index:
+            # if last_trading_day is already in db, meaning several fetches in one day, overwrite with new data
+            for key,value in dt_key_cols.items():
+                dfm_data[key] = value
+            key_cols = list(dt_key_cols.keys())
+            load_dfm_to_db_cur(dfm_data, key_cols, table_name, dict_misc_pars, process_mode='w_update')
+            return
+
+        ins_flg = False
+        if len(dfm_db_data) > 0:
+            # only insert DB in case the value is different from latest datetime's values
+            s_db_data_max_ts = dfm_db_data.loc[dfm_db_data.index[0]]
+            for col in dfm_data.columns:
+                # dfm_data的列名有可能带[],但是dataframe从sql server中读出时的列名是都不带[],所以要把[]去掉,再进行数据比较.
+                tmp_colname = col.replace('[', '').replace(']', '')
+                if tmp_colname in dfm_db_data.columns:
+                    # 如果两种是空值,只是None的类型不同,不处理.
+                    if pd.isnull(dfm_data.iloc[0][col]) and pd.isnull(s_db_data_max_ts[tmp_colname]):
+                        continue
+                    if dfm_data.iloc[0][col] != s_db_data_max_ts[tmp_colname]:
+                        # if numpy.float64 then it is possible the value has slight difference,so change rule to allow dif <0.0001
+                        dif = 1. / 10 ** float_fix_decimal
+                        try:
+                            dif = abs(dfm_data.iloc[0][col] - s_db_data_max_ts[tmp_colname])
+                        except:
+                            dif = 1.
+                        if dif >= 1. / 10 ** float_fix_decimal:
+                            # cur data is different from db data of latest transaction datetime
+                            ins_flg = True
+                            break
+                else:
+                    assert 0==1,"Column name %s doesn't exist in table %s but in dataframe" % (tmp_colname, table_name)
+        else:
+            # no db entry
+            ins_flg = True
+        if ins_flg:
+            # insert logic
+            logprint('Insert %s %s Period %s' % (table_name, dt_key_cols, last_trading_day))
+            # rename the df with new cols name,use rename function with a dict of old column to new column mapping
+            ls_colnames_dbinsert = list(map(special_process_col_name, dfm_data.columns))
+            ins_str_cols = ','.join(ls_colnames_dbinsert)
+            ins_str_pars = ','.join('?' * len(ls_colnames_dbinsert))
+            ls_dfmrow_dbtype_aligned = dbtype_aligned_format(dfm_data.iloc[0])
+            ls_ins_pars = []
+            ls_ins_pars.append((*ls_key_cols_value, last_trading_daytime, timestamp, dict_misc_pars['update_by'])
+                               + tuple(ls_dfmrow_dbtype_aligned))
+            ins_str = '''INSERT INTO %s (%s,Trans_Datetime,Created_datetime,Created_by,%s) VALUES (?,?,?,?,?,%s)''' % (
+                table_name, str_key_cols, ins_str_cols, ins_str_pars)
+            # print(ins_str)
+            try:
+                for ins_par in ls_ins_pars:
+                    conn.execute(ins_str, ins_par)
+            except:
+                raise
+
+    else:
+        for key, value in dt_key_cols.items():
+            dfm_data[key] = value
+        key_cols = list(dt_key_cols.keys())
+        load_dfm_to_db_cur(dfm_data,key_cols,table_name,dict_misc_pars,process_mode='w_update')
+
+def load_dfm_to_db_cur(dfm_cur_data:DataFrame,key_cols:list,table_name:str,dict_misc_pars:dict,process_mode:str):
     """
-    本函数用于单值属性的char的当前数据更新.
+    本函数用于单值属性的char的当前数据更新,注意,更新的表中是有transac_datetime作为key值的.
     导入的dfm中的数据到table中,processing_mode决定了处理方式:
     1) 'w_update: key_cols存在时, 进行update
     2) "wo_update: key_cols存在时,不进行update
@@ -632,7 +732,7 @@ def load_dfm_to_db_cur(dfm_cur_data:DataFrame,key_cols:list,table_name:str,dict_
             except:
                 raise
 
-    if len(dfm_update_data) >0 and processing_mode == 'w_update':
+    if len(dfm_update_data) >0 and process_mode == 'w_update':
         # update logic: update the entry
         ls_upt_pars = []
         for index,row in dfm_update_data.iterrows():
@@ -642,13 +742,134 @@ def load_dfm_to_db_cur(dfm_cur_data:DataFrame,key_cols:list,table_name:str,dict_
             upt_str_cols = '=?,'.join(ls_colnames_dbupdate) +'=?'+ ", Last_modified_datetime = ?,Last_modified_by=?"
             upt_str_keycols = '=? AND '.join(key_cols) +'=?'
             ls_dfmrow_dbtype_aligned = dbtype_aligned_format([row[col] for col in key_cols])
-            ls_upt_pars.append(tuple(row) + (timestamp, dict_misc_pars['update_by']) +
+            ls_upt_pars.append(tuple(dbtype_aligned_format(row)) + (timestamp, dict_misc_pars['update_by']) +
                                tuple(ls_dfmrow_dbtype_aligned))
 
         if ls_upt_pars:
             update_str = '''UPDATE %s SET %s 
                 WHERE %s ''' % (table_name, upt_str_cols,upt_str_keycols)
             conn.execute(update_str, tuple(ls_upt_pars))
+
+def load_dfm_to_db_single_value_by_mkt_stk_wo_datetime(market_id,item,dfm_data:DataFrame,table_name:str,dict_misc_pars:dict,
+                                               process_mode:str='w_check',float_fix_decimal = 4):
+    """
+    针对单个market和stock组合,char为单值且与时间无关的记录处理,本函数只处理没有时间相关的主键的表.比如股票的发行数据,是一次性数据,后续不可能再
+    有新的记录.
+    1) 如果
+    :param market_id:
+    :param item:
+    :param dfm_data: 只需包含当前获得的具体char值
+    :param table_name:
+    :param dict_misc_pars:
+    :param process_mode:
+    :return:
+    """
+
+    dt_key_cols = {'Market_ID': market_id, 'Stock_ID': item}
+    load_dfm_to_db_single_value_by_key_cols_wo_datetime(dt_key_cols, dfm_data, table_name, dict_misc_pars, process_mode,
+                                               float_fix_decimal)
+
+def load_dfm_to_db_single_value_by_key_cols_wo_datetime(dt_key_cols:dict,dfm_data:DataFrame,table_name:str,dict_misc_pars:dict,
+                                              process_mode,float_fix_decimal):
+    """
+    本函数用于单值属性的char的当前数据更新.
+    1) 如果处理模式为'w_check',则会检dfm中的数据是否和最近的DB记录是否一致,不一致才进行更新,
+    2) 非以上情况, 直接报错
+    :param dt_key_cols: 注意,所有DB表中的key cols的值必须都要提供,否则程序会出现不可预知的错误!
+    :param dfm_data:
+    :param table_name:
+    :param dict_misc_pars:
+    :return:
+    """
+    if process_mode == 'w_check':
+        # load DB contents
+        timestamp = datetime.now()
+
+        ls_key_col_items = dt_key_cols.items()
+        key_cols =[x[0] for x in ls_key_col_items]
+        ls_sel_key_cols = [ x[0] + ' = ?' for x in ls_key_col_items]   # ['Market_ID = ?','Stock_ID = ?']
+        ls_key_cols_value = [x[1] for x in ls_key_col_items]       # ['SH','600000']
+
+        str_key_cols = ','.join([x[0] for x in ls_key_col_items])
+        str_sel_key_cols = ' and '.join(ls_sel_key_cols)
+
+        last_trading_day = gcf.get_last_trading_day()
+        last_trading_daytime = datetime.strptime(str(last_trading_day), '%Y-%m-%d')
+
+        dfm_db_data = pd.read_sql_query("select * from %s where %s " %(table_name,str_sel_key_cols)
+                                            , conn, params=tuple(ls_key_cols_value))
+        # print(dfm_data)
+        # print(dfm_db_data)
+
+        db_flg = 'NA'
+        if len(dfm_db_data) > 0:
+            # only insert DB in case the value is different from latest datetime's values
+            s_db_data = dfm_db_data.iloc[0]
+            for col in dfm_data.columns:
+                # dfm_data的列名有可能带[],但是dataframe从sql server中读出时的列名是都不带[],所以要把[]去掉,再进行数据比较.
+                tmp_colname = col.replace('[', '').replace(']', '')
+                if tmp_colname in dfm_db_data.columns:
+                    # 如果两种是空值,只是None的类型不同,不处理.
+                    if pd.isnull(dfm_data.iloc[0][col]) and pd.isnull(s_db_data[tmp_colname]):
+                        continue
+                    if dfm_data.iloc[0][col] != s_db_data[tmp_colname]:
+                        # if numpy.float64 then it is possible the value has slight difference,so change rule to allow dif <0.0001
+                        dif = 1. / 10 ** float_fix_decimal
+                        try:
+                            dif = abs(dfm_data.iloc[0][col] - s_db_data[tmp_colname])
+                        except:
+                            dif = 1.
+                        if dif >= 1. / 10 ** float_fix_decimal:
+                            # cur data is different from db data of latest transaction datetime
+                            db_flg = 'UPDATE'
+                            break
+                else:
+                    assert 0==1,"Column name %s doesn't exist in table %s but in dataframe" % (tmp_colname, table_name)
+        else:
+            # no db entry
+            db_flg = 'INSERT'
+        if db_flg == 'INSERT':
+            # insert logic
+            logprint('Insert %s %s' % (table_name, dt_key_cols))
+            # rename the df with new cols name,use rename function with a dict of old column to new column mapping
+            ls_colnames_dbinsert = list(map(special_process_col_name, dfm_data.columns))
+            ins_str_cols = ','.join(ls_colnames_dbinsert)
+            ins_str_pars = ','.join('?' * len(ls_colnames_dbinsert))
+            ls_dfmrow_dbtype_aligned = dbtype_aligned_format(dfm_data.iloc[0])
+            ls_ins_pars = []
+            ls_ins_pars.append((*ls_key_cols_value, timestamp, dict_misc_pars['update_by'])
+                               + tuple(ls_dfmrow_dbtype_aligned))
+            ins_str = '''INSERT INTO %s (%s,Created_datetime,Created_by,%s) VALUES (?,?,?,?,%s)''' % (
+                table_name, str_key_cols, ins_str_cols, ins_str_pars)
+            # print(ins_str)
+            try:
+                for ins_par in ls_ins_pars:
+                    conn.execute(ins_str, ins_par)
+            except:
+                raise
+        elif db_flg == 'UPDATE':
+            logprint('UPDATE %s %s' % (table_name, dt_key_cols))
+
+            # rename the df with new cols name,use rename function with a dict of old column to new column mapping
+            ls_colnames_dbupdate = list(map(special_process_col_name,dfm_data.columns))
+            upt_str_cols = '=?,'.join(ls_colnames_dbupdate) +'=?'+ ", Last_modified_datetime = ?,Last_modified_by=?"
+            upt_str_keycols = '=? AND '.join(key_cols) +'=?'
+
+            ls_upt_pars = []
+            ls_upt_pars.append(tuple(dbtype_aligned_format(dfm_data.iloc[0])) + (timestamp, dict_misc_pars['update_by']) +
+                               tuple(ls_key_cols_value))
+
+            update_str = '''UPDATE %s SET %s 
+                WHERE %s ''' % (table_name, upt_str_cols,upt_str_keycols)
+            try:
+                conn.execute(update_str, tuple(ls_upt_pars))
+            except:
+                raise
+
+
+    else:
+        assert 0==1,'Unkown process_mode, exception raised!'
+
 
 def load_snapshot_dfm_to_db(dfm_log:DataFrame,table_name,mode:str = '', w_timestamp:bool = False ):
     """

@@ -29,7 +29,6 @@ def fetch2DB(stockid:str = ''):
     dict_misc_pars['char_freq'] = "D"
     dict_misc_pars['allow_multiple'] = 'Y'
     dict_misc_pars['created_by'] = dict_misc_pars['update_by'] = global_module_name
-    dict_misc_pars['char_usage'] = 'CATG'
     dict_misc_pars['char_usage'] = 'CORE_CONCEPT'
     # check whether db table is created.
     table_name = R50_general.general_constants.dbtables['stock_core_concept_eastmoney']

@@ -10,6 +10,7 @@ weblinks = {
     'stock_structure_sina':'http://vip.stock.finance.sina.com.cn/corp/go.php/vCI_StockStructure/stockid/%s.phtml',
     'stock_core_concept_eastmoney':"http://emweb.securities.eastmoney.com/PC_HSF10/CoreConception/CoreConceptionAjax?code=%s",
     'stock_shareholder_eastmoney':'http://emweb.securities.eastmoney.com/PC_HSF10/ShareholderResearch/ShareholderResearchAjax?code=%s',
+    'stock_general_info_eastmoney':'http://emweb.securities.eastmoney.com/PC_HSF10/CompanySurvey/CompanySurveyAjax?code=%s',
 }
 
 
@@ -30,6 +31,8 @@ dbtables = {
     'stock_top_ten_shareholder_shares_changes_eastmoney':'DD_stock_shareholder_top_ten_shares_changes_eastmoney',
     'stock_fund_shareholder_eastmoney':'DD_stock_shareholder_fund_eastmoney',
     'stock_nontradable_shares_release_eastmoney':'DD_stock_shareholder_nontradable_shares_release_eastmoney',
+    'stock_company_general_info_eastmoney':'DD_stock_company_general_info_eastmoney',
+    'stock_company_issuance_info_eastmoney':'DD_stock_company_issuance_info_eastmoney',
 }
 dbtemplate_stock_date = """
 CREATE TABLE [%(table)s](
@@ -128,6 +131,10 @@ scheduleman = {
         'rule': 'W',
         'weekdays': [0,2,4]  # Monday,wednesday,Friday
     },
+    'fetch_stock_company_general_info_from_eastmoney':{
+        'rule': 'W',
+        'weekdays': [2,]  # wednesday
+    }
 
 }
 

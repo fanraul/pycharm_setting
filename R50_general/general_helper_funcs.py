@@ -113,6 +113,7 @@ def dfm_col_type_conversion(dfm:DataFrame,index='',columns= {}, dateformat='%Y-%
     this function is a general function to convert the columns in dataframe as the requested data type, it can also handle
     some general data conversion rule, such as '--' means None, but it shouldn't include some very specific rule(which should
     be handled by web scraper program itself.
+    Caution: this function modify the dataframe directly, no return value.
     conversion rule includes:
     1) general rule for treat the data source as None.(eg. '--'), Note,put None into dataframe doesn't mean the data type will
        be None, there is no None in dataframe for number or datetime type, based on column data type, it will be converted to
@@ -181,7 +182,9 @@ def dfmprint(*args, sep=' ',  end='\n',  file=None):
     print(*args, sep=' ',  end='\n',  file=None)
 
 def isStrNumber(s:str):
-    if re.match('^[-+]?[0-9]+\.[0-9]+$',s):
+    if s.isdigit():
+        return True
+    elif re.match('^[-+]?[0-9]+\.[0-9]+$',s):
         return True
     else:
         return False
@@ -440,3 +443,44 @@ if __name__ == "__main__":
     # print(isStrNumber('123.3.4'))
 
 
+def parse_chinese_uom(par:str):
+    # print(par,len(par),type(par))
+    if not par:
+        return None
+    if par == '--':
+        return None
+    if len(par) > 1:
+        chinese_uom = par[-1:]
+        if chinese_uom == '万':
+            return floatN(par[:-1], '*', 10000)
+        elif chinese_uom == '亿':
+            return floatN(par[:-1], '*', 100000000)
+        elif isStrNumber(par):
+            return floatN(par)
+    elif len(par) == 1:
+        if isStrNumber(par):
+            return floatN(par)
+    assert 0==1, 'unknown format %s for chinese uom' %par
+
+
+def floatN(x:str, oper:str ='*',y:float = 1):
+    if not x:
+        return None
+    if type(x) == str:
+        x = x.replace(',','')
+        if x == '--':
+            return None
+    if oper == '*':
+        return float(x) * y
+    if oper == '/':
+        return float(x) / y
+    assert 0==1, 'unkown Operator!'
+
+
+def intN(i:str):
+    if not i:
+        return None
+    else:
+        i = i.replace(',','')
+        i = i.replace('.00','')
+        return int(i)

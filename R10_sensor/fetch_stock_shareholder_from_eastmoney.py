@@ -1,19 +1,13 @@
-import pandas as pd
-from pandas import Series, DataFrame
-import numpy as np
-
-from bs4 import BeautifulSoup
-import urllib.request
-import re
-
+import json
 from datetime import datetime
 
+from pandas import DataFrame
+
+import R50_general.advanced_helper_funcs as ahf
+import R50_general.dfm_to_table_common as df2db
 import R50_general.general_constants
 import R50_general.general_helper_funcs as gcf
-from R50_general.general_helper_funcs import logprint
-import R50_general.dfm_to_table_common as df2db
-import json
-import R50_general.advanced_helper_funcs as ahf
+from R50_general.general_helper_funcs import logprint, parse_chinese_uom, floatN, intN
 
 global_module_name = 'fetch_stock_shareholder_from_eastmoney'
 
@@ -210,11 +204,11 @@ def json_parse_stock_sh10(json_stock_sh:str):
             item = {x:y.strip() if y != '--' and y else None for (x,y) in item.items()}
             dt_sh10 = {}
             dt_sh10['股东人数'] = parse_chinese_uom(item['gdrs'])
-            dt_sh10['较上期变化比例'] = floatN(item['gdrs_jsqbh'],'/',100)
+            dt_sh10['较上期变化比例'] = floatN(item['gdrs_jsqbh'], '/', 100)
             dt_sh10['筹码集中度'] = item['cmjzd']
             dt_sh10['股价'] = floatN(item['gj'])
-            dt_sh10['前十大股东持股合计比例'] = floatN(item['qsdgdcghj'],'/',100)
-            dt_sh10['前十大流通股东持股合计比例'] = floatN(item['qsdltgdcghj'],'/',100)
+            dt_sh10['前十大股东持股合计比例'] = floatN(item['qsdgdcghj'], '/', 100)
+            dt_sh10['前十大流通股东持股合计比例'] = floatN(item['qsdltgdcghj'], '/', 100)
             ls_sh10.append(dt_sh10)
             ls_sh10_index.append(datetime.strptime(item['rq'],'%Y-%m-%d'))
             """
@@ -414,38 +408,6 @@ def json_parse_stock_sh60(json_stock_sh:str):
     else:
         return DataFrame()
 
-def parse_chinese_uom(par:str):
-    if not par:
-        return None
-    if len(par) > 1:
-        chinese_uom = par[-1:]
-        if chinese_uom == '万':
-            return floatN(par[:-1], '*', 10000)
-        elif chinese_uom == '亿':
-            return floatN(par[:-1], '*', 100000000)
-        elif gcf.isStrNumber(par):
-            return floatN(par)
-    assert 0==1, 'unknown format %s for chinese uom' %par
-
-def floatN(x:str, oper:str ='*',y:float = 1):
-    if not x:
-        return None
-
-    if type(x) == str:
-        x = x.replace(',','')
-    if oper == '*':
-        return float(x) * y
-    if oper == '/':
-        return float(x) / y
-    assert 0==1, 'unkown Operator!'
-
-def intN(i:str):
-    if not i:
-        return None
-    else:
-        i = i.replace(',','')
-        i = i.replace('.00','')
-        return int(i)
 
 def pertentage(p:str):
     if not p:
