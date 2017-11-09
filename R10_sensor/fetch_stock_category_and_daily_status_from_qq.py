@@ -151,7 +151,7 @@ def fetch2DB():
                                  dict_misc_pars_catgtrans)
     # insert into db
     df2db.load_dfm_to_db_cur(dfm_catgs_daily_trans,['Catg_Type','Catg_Name','Trans_Datetime'],table_name_catg_trans,
-                             dict_misc_pars_catgtrans)
+                             dict_misc_pars_catgtrans, process_mode='w_update')
 
 def parse_stock_under_catg(dfm_catgs:DataFrame) ->dict:
     """
