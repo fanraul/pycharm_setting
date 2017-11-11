@@ -12,7 +12,7 @@ from datetime import datetime
 dcm_sql = dcm(echo=False)
 conn = dcm_sql.getconn()
 
-def get_cn_stocklist(stock :str ="", str_excluded_stockids="''") -> DataFrame:
+def get_cn_stocklist(stock :str ="", ls_excluded_stockids=[]) -> DataFrame:
     """
     获得沪市和深市的股票清单
     :return: dataframe of SH and SZ stocks
@@ -23,9 +23,15 @@ def get_cn_stocklist(stock :str ="", str_excluded_stockids="''") -> DataFrame:
                                             from stock_basic_info 
                                             where ((Market_ID = 'SH' and Stock_ID like '6%') 
                                             or (Market_ID = 'SZ' and (Stock_ID like '0%' or Stock_ID like '3%' )))
-                                            and sec_type = '1' ''' +  'and Stock_ID not in (%s)' %str_excluded_stockids
+                                            and sec_type = '1' '''
+                                       # +  'and Stock_ID not in (%s)' %str_excluded_stockids  //don't filter sotck id
+                                       # in SQL language, since it might be thousand entry to be exclued, it will cause
+                                       # SQL server memory issue since the DB server currently only 2 GB memory!!
                                    , conn)
-       # print(dfm_stocks)
+        # print(dfm_stocks)
+        dfm_stocks_excluded = dfm_stocks[dfm_stocks.Stock_ID.isin(ls_excluded_stockids)]
+
+        dfm_stocks = gcf.dfm_A_minus_B(dfm_stocks,dfm_stocks_excluded,key_cols=['Stock_ID'])
     else:
         dfm_stocks = pd.read_sql_query('''select Market_ID,Stock_ID,Stock_Name,is_active,
                                             Market_ID + Stock_ID as MktStk_ID 
@@ -966,6 +972,6 @@ if __name__ == "__main__":
     # [Market_ID],[Update_time]) VALUES (?,?,?,?,?,?,?,?)', ('北京中天信会计师事务所', '四川华信(集团)会计师事务所',
     # '2002-01-12 00:00:00', None, '境内会计师事务所', '000155', 'SZ', '2017-09-12 21:13:12'))
 
-
-
+    dfmtest = get_cn_stocklist('',ls_excluded_stockids=['000001','600000','000002'])
+    gcf.dfmprint(dfmtest)
     pass
