@@ -38,11 +38,7 @@ def auto_reprocess_dueto_ipblock(identifier:str,func_to_call,wait_seconds:int = 
         log_file_progressed_stockids = ghf.log_folder + ghf.log_job_name + '_' + 'process_log_%s.txt' %identifier
     append_log_file = open(log_file_progressed_stockids,'a')   #先用a模式生成文件,再用r模式读取文件,否则会报找不到文件的错误
     read_log_file = open(log_file_progressed_stockids,'r')
-    ls_stockids_processed = ["'%s'" %line.strip() for line in read_log_file.readlines()]
-    # if ls_stockids_processed:
-    #     str_stockids_processed = ','.join(ls_stockids_processed)
-    # else:
-    #     str_stockids_processed = "''"
+    ls_stockids_processed = [line.strip() for line in read_log_file.readlines()]
     # step2.1: get current stock list
     dfm_stocks_to_process = df2db.get_cn_stocklist('',ls_excluded_stockids=ls_stockids_processed)
     for index,row in dfm_stocks_to_process.iterrows():
