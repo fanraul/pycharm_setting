@@ -1,6 +1,7 @@
 import time
 import urllib.error
 import json.decoder
+import http.client
 from datetime import datetime
 import os
 
@@ -46,7 +47,7 @@ def auto_reprocess_dueto_ipblock(identifier:str,func_to_call,wait_seconds:int = 
             func_to_call(row['Stock_ID'])
             append_log_file.write(row['Stock_ID'] + '\n')
             append_log_file.flush()  #由于缓冲，字符串可能实际上没有出现在该文件中，直到调用flush()或close()方法被调用.
-        except (urllib.error.HTTPError,urllib.error.URLError):
+        except (urllib.error.HTTPError,urllib.error.URLError,http.client.RemoteDisconnected):
             append_log_file.close()
             read_log_file.close()
             logprint('Web scrapping exception raised, auto reprocess after %s seconds. Current time is %s' % (wait_seconds,datetime.now()))
