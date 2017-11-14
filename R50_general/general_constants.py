@@ -11,6 +11,7 @@ weblinks = {
     'stock_core_concept_eastmoney':"http://emweb.securities.eastmoney.com/PC_HSF10/CoreConception/CoreConceptionAjax?code=%s",
     'stock_shareholder_eastmoney':'http://emweb.securities.eastmoney.com/PC_HSF10/ShareholderResearch/ShareholderResearchAjax?code=%s',
     'stock_general_info_eastmoney':'http://emweb.securities.eastmoney.com/PC_HSF10/CompanySurvey/CompanySurveyAjax?code=%s',
+    'stock_dividend_cninfo':'http://www.cninfo.com.cn/information/dividend/%(market_id)s%(stock_id)s.html',
 }
 
 
@@ -18,8 +19,6 @@ weblinks = {
 dbtables = {
     'finpreports_Tquant' :['DD_stock_fin_balance_tquant', 'DD_stock_fin_profit_tquant','DD_stock_fin_cashflow_tquant'],
     'name_hist_qq': 'DD_stock_name_change_hist_qq',
-    'fixed_basic_info_tquant': 'DD_stock_fixed_basic_info_tquant',
-    'basic_info1_tquant': 'DD_stock_basic_info1_tquant',
     'stock_category_relation_qq':'DD_stock_category_assignment_qq',
     'category_daily_trans_qq': 'DD_category_daily_noauth_qq',
     'stock_structure_sina':'DD_stock_structure_sina',
@@ -33,6 +32,9 @@ dbtables = {
     'stock_nontradable_shares_release_eastmoney':'DD_stock_shareholder_nontradable_shares_release_eastmoney',
     'stock_company_general_info_eastmoney':'DD_stock_company_general_info_eastmoney',
     'stock_company_issuance_info_eastmoney':'DD_stock_company_issuance_info_eastmoney',
+    'stock_dividend_cninfo':'DD_stock_dividend_cninfo',
+    'stock_fhsp_sina': 'DD_stock_fhsp_sina',  # TODO
+    'stock_fhsp_eastmoney': 'DD_stock_fhsp_eastmoney',    # TODO
 }
 dbtemplate_stock_date = """
 CREATE TABLE [%(table)s](

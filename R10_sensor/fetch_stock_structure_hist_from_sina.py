@@ -3,11 +3,8 @@ from pandas import Series, DataFrame
 import numpy as np
 
 from bs4 import BeautifulSoup
-import urllib.request
 import re
-import time
 from datetime import datetime
-import os
 import gc
 
 import R50_general.advanced_helper_funcs as ahf
@@ -15,9 +12,10 @@ import R50_general.general_constants
 import R50_general.general_helper_funcs as gcf
 from R50_general.general_helper_funcs import logprint
 import R50_general.dfm_to_table_common as df2db
-import urllib.error
 
 timestamp = datetime.now()
+
+global_module_name = 'fetch_stock_structure_hist_from_sina'
 
 
 def fetch2DB(stockid:str = ''):
@@ -30,7 +28,7 @@ def fetch2DB(stockid:str = ''):
     dict_misc_pars['char_origin'] = 'SINA'
     dict_misc_pars['char_freq'] = "D"
     dict_misc_pars['allow_multiple'] = 'N'
-    dict_misc_pars['created_by'] = dict_misc_pars['update_by'] = 'fetch_stock_structure_hist_from_sina'
+    dict_misc_pars['created_by'] = dict_misc_pars['update_by'] = global_module_name
     dict_misc_pars['char_usage'] = 'STRC'
 
     # check whether db table is created.
@@ -85,8 +83,7 @@ def fetch2DB(stockid:str = ''):
         # only one entry allowed in one day, so need to combine multiple changes in one day into one entry
         process_duplicated_entries(dfm_fmt_stk_strc,row['Stock_ID'])
         gcf.dfmprint(dfm_fmt_stk_strc)
-        market_id = 'SH' if row['Stock_ID'].startswith('6') else 'SZ'
-        df2db.load_dfm_to_db_single_value_by_mkt_stk_w_hist(market_id, row['Stock_ID'], dfm_fmt_stk_strc, table_name,
+        df2db.load_dfm_to_db_single_value_by_mkt_stk_w_hist(row['Market_ID'], row['Stock_ID'], dfm_fmt_stk_strc, table_name,
                                                             dict_misc_pars,
                                                             processing_mode='w_update')
         gc.collect()
@@ -212,7 +209,7 @@ def get_subsequent_tds_by_first_td_content(soup,key_tdnode:str)->list:
     return ls_str_td[:]
 
 def auto_reprocess():
-    ahf.auto_reprocess_dueto_ipblock(identifier='fetch_stock_structure_hist_from_sina', func_to_call= fetch2DB, wait_seconds= 600)
+    ahf.auto_reprocess_dueto_ipblock(identifier=global_module_name, func_to_call= fetch2DB, wait_seconds= 600)
 
 if __name__ == '__main__':
     #fetch2DB('600061')

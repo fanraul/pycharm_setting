@@ -48,6 +48,9 @@ import datetime
 
 # gt.get_brief(['600100','600000']).to_excel('上市公司基本资料.xls')
 
-today = datetime.datetime.now()
-yesterday = today - datetime.timedelta(days =1)
-print(gt.get_calendar(yesterday,today))
+# today = datetime.datetime.now()
+# yesterday = today - datetime.timedelta(days =1)
+# print(gt.get_calendar(yesterday,today))
+
+print(gt.get_dividend('300020'))
+print(gt.get_allotment('300020'))

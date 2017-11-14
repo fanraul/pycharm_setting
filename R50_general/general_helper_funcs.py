@@ -77,6 +77,11 @@ def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False):
         response = urllib.request.urlopen(req)
         html = response.read()
         print('web page loading end..')
+
+        # leave it here for future if required.
+        # sohu的网页编码有问题，直接解析会丢失html的body，要用errors等于ignore忽略解码错误后，再进行解析。
+        # str_html = html.decode("gbk", errors='ignore')
+
         if flg_return_json:
             return html.decode()
         soup = BeautifulSoup(html,"lxml")
@@ -105,7 +110,7 @@ def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False):
 
     except Exception as e:
         logprint("Weblink %s open failed error unkown:" % weblink_str, e,type(e))
-        raise
+        raise e
 
 
 def dfm_col_type_conversion(dfm:DataFrame,index='',columns= {}, dateformat='%Y-%m-%d'):
@@ -157,14 +162,20 @@ def dfm_col_type_conversion(dfm:DataFrame,index='',columns= {}, dateformat='%Y-%
             return int(i)
         return(int(round(i,0)))
 
+    def str_conversion(s):
+        if s:
+            return str(s)
+        else:
+            return None
+
     for col in columns:
         if col in dfm.columns:
             new_type = columns[col]
             if new_type == 'datetime':
                 # ☆if no date or '1900-1-1' is specified, put None means no data specified!
                 dfm[col] = dfm[col].map(datetime_conversion)
-            elif 'varchar' in columns[col] or 'str' == columns[col]:
-                dfm[col] = dfm[col].astype('str')
+            elif 'varchar' in columns[col] or 'str' == columns[col] or 'char' in columns[col]:
+                dfm[col] = dfm[col].map(str_conversion)
             elif 'int' in columns[col]:
                 dfm[col] = dfm[col].map(int_conversion)
             elif 'float' in columns[col] or 'double' or 'decimal' in columns[col]:
@@ -476,6 +487,17 @@ def floatN(x:str, oper:str ='*',y:float = 1):
         return float(x) / y
     assert 0==1, 'unkown Operator!'
 
+def market_id_conversion_for_cninfo(stockid:str):
+    if stockid.startswith('6') :
+        return 'shmb'
+    if stockid.startswith('000') or stockid.startswith('001'):
+        return 'szmb'
+    if stockid.startswith('002'):
+        return 'szsme'
+    if stockid.startswith('3'):
+        return 'szcn'
+
+    assert False,'Can not determine market prefix of stockid %s for cninfo web linkage conversion!' %stockid
 
 def intN(i:str):
     if not i:
