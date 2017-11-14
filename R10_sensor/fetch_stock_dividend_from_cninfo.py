@@ -93,7 +93,7 @@ def soup_parse_stock_dividend(soup):
             if content_fhsp[1].string.strip():
                 dt_fhsp = {}
                 dt_fhsp['分红年度'] = content_fhsp[0].string.strip()
-                dt_fhsp['分红方案'] = content_fhsp[1].string.strip()
+                dt_fhsp['分红方案'] = special_rule_for_exceptional_dividend_txt(content_fhsp[1].string.strip())
                 dt_fhsp['股权登记日'] = content_fhsp[2].string.strip()
                 dt_fhsp['除权基准日'] = content_fhsp[3].string.strip()
                 dt_fhsp['红股上市日'] = content_fhsp[4].string.strip()
@@ -143,12 +143,19 @@ def parse_dividend_txt_to_number(divid_txt:str):
 
     return song,zhuan,pai,error_flg
 
+def special_rule_for_exceptional_dividend_txt(s):
+    if s == '10派1.01元（含税）,大股东西航集团10派0.78元（含税）':
+        return '10派1.01元（含税）'
+    if s == '10派2元(含税)追加方案:10送1股派1元(含税)':  #20090626
+        return '10送1股派3元(含税)'
+    return s
+
 def process_duplicated_entries(dfm_stk_info:DataFrame,stockid):
     dfm_duplicated = dfm_stk_info[dfm_stk_info.duplicated(['股权登记日'])]
     # print(dfm_duplicated)
     dfm_stk_info.drop_duplicates('股权登记日',inplace=True)
     for index, row in dfm_duplicated.iterrows():
-        dfm_stk_info.loc[index,'分红年度'] = dfm_stk_info.loc[index]['分红年度'] + '|' + row['分红年度']
+        dfm_stk_info.loc[index,'分红年度'] = add_considering_None(dfm_stk_info.loc[index]['分红年度'],row['分红年度'])
         dfm_stk_info.loc[index,'分红方案'] = dfm_stk_info.loc[index]['分红方案'] + '|' + row['分红方案']
         if dfm_stk_info.loc[index]['方案文本解析错误标识位'] !='E':
             if row['方案文本解析错误标识位'] == 'E':
@@ -162,9 +169,12 @@ def process_duplicated_entries(dfm_stk_info:DataFrame,stockid):
                 dfm_stk_info.loc[index,'送股(股)/10股'] = add_considering_None(dfm_stk_info.loc[index]['送股(股)/10股'] , row['送股(股)/10股'])
         logprint('Stock %s 股权登记日 %s 记录合并到主记录中. %s' %(stockid,row['股权登记日'],tuple(row)))
 
-def add_considering_None(f1,f2):
+def add_considering_None(f1,f2,strsplitter='|'):
     if f1 and f2:
-        return f1 + f2
+        if type(f1) == type('a'):
+            return f1 + strsplitter +f2
+        else:
+            return f1 + f2
     if f1 and not f2:
         return f1
     if not f1 and f2:
