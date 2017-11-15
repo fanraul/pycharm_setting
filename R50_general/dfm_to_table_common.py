@@ -19,8 +19,10 @@ def get_cn_stocklist(stock :str ="", ls_excluded_stockids=[]) -> DataFrame:
     """
     if stock == "":
         dfm_stocks = pd.read_sql_query('''select Market_ID,Stock_ID,Stock_Name,is_active,
-                                            Market_ID + Stock_ID as MktStk_ID 
-                                            from stock_basic_info 
+                                            Market_ID + Stock_ID as MktStk_ID,
+                                            Tquant_Market_ID,
+                                            上市日期
+                                            from BD1_stocklist_with_general_info 
                                             where ((Market_ID = 'SH' and Stock_ID like '6%') 
                                             or (Market_ID = 'SZ' and (Stock_ID like '0%' or Stock_ID like '3%' )))
                                             and sec_type = '1' '''
@@ -34,8 +36,10 @@ def get_cn_stocklist(stock :str ="", ls_excluded_stockids=[]) -> DataFrame:
         dfm_stocks = gcf.dfm_A_minus_B(dfm_stocks,dfm_stocks_excluded,key_cols=['Stock_ID'])
     else:
         dfm_stocks = pd.read_sql_query('''select Market_ID,Stock_ID,Stock_Name,is_active,
-                                            Market_ID + Stock_ID as MktStk_ID 
-                                            from stock_basic_info
+                                            Market_ID + Stock_ID as MktStk_ID,
+                                            Tquant_Market_ID,
+                                            上市日期                                             
+                                            from BD1_stocklist_with_general_info
                                                 where  (Market_ID = 'SH' or Market_ID = 'SZ')  
                                                 and sec_type = '1'
                                                     ''' + "and Stock_ID = '%s'" %stock
@@ -741,15 +745,18 @@ def load_dfm_to_db_cur(dfm_cur_data:DataFrame,key_cols:list,table_name:str,dict_
     if len(dfm_update_data) >0 and process_mode == 'w_update':
         # update logic: update the entry
         ls_upt_pars = []
+        # rename the df with new cols name,use rename function with a dict of old column to new column mapping
+        upt_cols_name = [x for x in dfm_update_data.columns if x not in key_cols]
+        ls_colnames_dbupdate = list(map(special_process_col_name, upt_cols_name))
+        upt_str_cols = '=?,'.join(ls_colnames_dbupdate) + '=?' + ", Last_modified_datetime = ?,Last_modified_by=?"
+        upt_str_keycols = '=? AND '.join(key_cols) + '=? AND Trans_Datetime = ?'
+
         for index,row in dfm_update_data.iterrows():
             logprint('Update table %s Record %s at Period %s' % (table_name, [row[col] for col in key_cols], last_trading_day))
-            # rename the df with new cols name,use rename function with a dict of old column to new column mapping
-            ls_colnames_dbupdate = list(map(special_process_col_name,dfm_update_data.columns))
-            upt_str_cols = '=?,'.join(ls_colnames_dbupdate) +'=?'+ ", Last_modified_datetime = ?,Last_modified_by=?"
-            upt_str_keycols = '=? AND '.join(key_cols) +'=?'
-            ls_dfmrow_dbtype_aligned = dbtype_aligned_format([row[col] for col in key_cols])
-            ls_upt_pars.append(tuple(dbtype_aligned_format(row)) + (timestamp, dict_misc_pars['update_by']) +
-                               tuple(ls_dfmrow_dbtype_aligned))
+            upt_row = [row[x] for x in upt_cols_name]
+            upt_keycols_dbtype_aligned = dbtype_aligned_format([row[col] for col in key_cols])
+            ls_upt_pars.append(tuple(dbtype_aligned_format(upt_row)) + (timestamp, dict_misc_pars['update_by']) +
+                               tuple(upt_keycols_dbtype_aligned)+(last_trading_daytime,))
 
         if ls_upt_pars:
             update_str = '''UPDATE %s SET %s 
@@ -938,6 +945,29 @@ def get_catg(origin:str) -> DataFrame:
                                        , conn)
     return dfm_catg
 
+def get_last_fetch_date(program_name:str, format ='datetime'):
+    """
+    get last fetch date from table_name, use to update periodic date considering interval as parameter
+    such as stock dailybar
+    :param table_name:
+    :return:
+    """
+    dfm_last_fetch_day = pd.read_sql_query("select last_fetch_date from DZ_scrap_job_last_fetch_date where program_name = '%s'" %program_name
+                                   , conn)
+
+    if len(dfm_last_fetch_day) == 0:
+        return None
+    elif format == 'detetime':
+        return dfm_last_fetch_day.iloc[0]['last_fetch_date']
+    elif format == 'date':
+        return dfm_last_fetch_day.iloc[0]['last_fetch_date'].date()
+    else:
+        return dfm_last_fetch_day.iloc[0]['last_fetch_date'].strftime(format)
+
+
+
+
+
 # SQL server don't support ALTER AFTER ,no no way to change the columns sequence.
 # def get_col_for_insert(table_name, col_insert_before:str ='Created_datetime'):
 #     """
@@ -956,6 +986,81 @@ def get_catg(origin:str) -> DataFrame:
 #     insert_offset = dfm_db1[dfm_db1.name == col_insert_before].index[0] -1
 #
 #     return dfm_db1.iloc[insert_offset]['name']
+
+def updateDB_last_fetch_date(program_name,fetch_datetime):
+    dfm1 = DataFrame([{'program_name':program_name,'last_fetch_date':fetch_datetime}])
+    key_cols = ['program_name']
+    dfm_to_db_insert_or_update(dfm1,key_cols,'DZ_scrap_job_last_fetch_date',program_name)
+
+def dfm_to_db_insert_or_update(dfm_cur_data: DataFrame, key_cols: list, table_name: str, updated_by:str, process_mode:str='w_update'):
+    """
+    本函数用于通用的dfm的数据直接更新table,传入的key_cols list必须包含table中的所有key cols,.
+    导入的dfm中的数据到table中,processing_mode决定了处理方式:
+    1) 'w_update: key_cols存在时, 进行update
+    2) "wo_update: key_cols存在时,不进行update
+    :param dfm:
+    :param table_name:
+    :param dict_misc_pars:
+    :processing_mode:
+    :return:
+    """
+
+    # load DB contents
+    timestamp = datetime.now()
+    dfm_db_data = pd.read_sql_query("select * from %s " % table_name, conn)
+    dfm_insert_data = gcf.dfm_A_minus_B(dfm_cur_data, dfm_db_data, key_cols)
+    dfm_update_data = gcf.dfm_A_intersect_B(dfm_cur_data, dfm_db_data, key_cols)
+
+    # gcf.dfmprint(dfm_insert_data)
+    if len(dfm_insert_data) > 0:
+        ins_str_cols = ''
+        ins_str_pars = ''
+        ls_ins_pars = []
+        for index, row in dfm_insert_data.iterrows():
+            # insert logic
+            logprint('Insert table %s new Record %s' % (
+            table_name, [row[col] for col in key_cols]))
+            # rename the df with new cols name,use rename function with a dict of old column to new column mapping
+            ls_colnames_dbinsert = list(map(special_process_col_name, dfm_insert_data.columns))
+            ins_str_cols = ','.join(ls_colnames_dbinsert)
+            ins_str_pars = ','.join('?' * len(ls_colnames_dbinsert))
+            #        print(ins_str_cols)
+            #        print(ins_str_pars)
+            # convert into datetime type so that it can update into SQL server
+            # trans_datetime = datetime.strptime(str(ts_id.date()), '%Y-%m-%d')
+            # trans_datetime = ts_id.to_pydatetime()
+            ls_dfmrow_dbtype_aligned = dbtype_aligned_format(row)
+            ls_ins_pars.append((timestamp, updated_by)
+                               + tuple(ls_dfmrow_dbtype_aligned))
+        if ins_str_cols:
+            ins_str = '''INSERT INTO %s (Created_datetime,Created_by,%s) VALUES (?,?,%s)''' % (
+                table_name, ins_str_cols, ins_str_pars)
+            # print(ins_str)
+            try:
+                conn.execute(ins_str, ls_ins_pars)
+            except:
+                raise
+
+    if len(dfm_update_data) > 0 and process_mode == 'w_update':
+        # update logic: update the entry
+        ls_upt_pars = []
+        for index, row in dfm_update_data.iterrows():
+            logprint('Update table %s Record %s' % (
+            table_name, [row[col] for col in key_cols]))
+            # rename the df with new cols name,use rename function with a dict of old column to new column mapping
+            ls_colnames_dbupdate = list(map(special_process_col_name, dfm_update_data.columns))
+            upt_str_cols = '=?,'.join(
+                ls_colnames_dbupdate) + '=?' + ", Last_modified_datetime = ?,Last_modified_by=?"
+            upt_str_keycols = '=? AND '.join(key_cols) + '=?'
+            ls_dfmrow_dbtype_aligned = dbtype_aligned_format([row[col] for col in key_cols])
+            ls_upt_pars.append(tuple(dbtype_aligned_format(row)) + (timestamp, updated_by) +
+                               tuple(ls_dfmrow_dbtype_aligned))
+
+        if ls_upt_pars:
+            update_str = '''UPDATE %s SET %s 
+                WHERE %s ''' % (table_name, upt_str_cols, upt_str_keycols)
+            conn.execute(update_str, tuple(ls_upt_pars))
+
 
 if __name__ == "__main__":
     # print(get_cn_stocklist())

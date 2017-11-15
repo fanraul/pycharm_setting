@@ -42,6 +42,7 @@ def fetch2DB():
     ls_upt_pars =[]
     for symbol in dfm_stocklist.index:
         market_id,stock_id = symbol.split('.')
+        tquant_market_id = market_id
         market_id = 'SH' if market_id == 'SHSE' else market_id
         market_id = 'SZ' if market_id == 'SZSE' else market_id
         if dfm_stocklist.loc[symbol]['is_active'] == 0 and dfm_stocklist.loc[symbol]['lower_limit']==0:
@@ -57,12 +58,12 @@ def fetch2DB():
         if market_id+stock_id in list(dfm_db_stocks['symbol']):
             # update
             ls_upt_pars.append((stock_name,sec_type,is_active,timestamp,
-                                     'fetch_stocklist_from_Tquant',margin_ratio,multiplier,price_tick,market_id,stock_id))
+                                     'fetch_stocklist_from_Tquant',margin_ratio,multiplier,price_tick,tquant_market_id,market_id,stock_id))
             logprint("update stock: %s.%s" %(market_id,stock_id))
         else:
             # insert
             ls_ins_pars.append((market_id,stock_id,stock_name,sec_type,is_active,timestamp,
-                                     'fetch_stocklist_from_Tquant',margin_ratio,multiplier,price_tick))
+                                     'fetch_stocklist_from_Tquant',margin_ratio,multiplier,price_tick,tquant_market_id))
             logprint("insert stock: %s.%s" %(market_id,stock_id))
 
     if ls_ins_pars:
@@ -75,8 +76,9 @@ def fetch2DB():
                                                ,[Created_by]
                                                ,[margin_ratio]
                                                ,[multiplier]
-                                               ,[price_tick])
-                    VALUES (?,?,?,?,?,?,?,?,?,?) """
+                                               ,[price_tick]
+                                               ,[Tquant_Market_ID])
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?) """
         try:
             conn.execute(ins_str,ls_ins_pars)
             logprint('INSERT INTO stock_basic_info is done')
@@ -85,7 +87,7 @@ def fetch2DB():
 
     if ls_upt_pars:
         upt_str = """UPDATE stock_basic_info SET Stock_Name = ?,sec_type=?,is_active=?,update_time=?,update_by =?,
-                     margin_ratio = ?,multiplier=?,price_tick=? WHERE Market_ID = ? AND Stock_ID = ?"""
+                     margin_ratio = ?,multiplier=?,price_tick=?,Tquant_Market_ID=? WHERE Market_ID = ? AND Stock_ID = ?"""
         try:
             conn.execute(upt_str,ls_upt_pars)
             logprint('UPDATE stock_basic_info is done')

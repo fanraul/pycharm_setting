@@ -1,4 +1,8 @@
+from datetime import datetime
 Global_Job_Log_Base_Direction = 'C:/00_RichMinds/log/'
+
+# the earliset dailybar date time, in dev, it's currently it is 2014-1-1.
+Global_dailybar_begin_date = datetime(2015,1,1).date()
 
 weblinks = {
     'stock_list_easymoney': 'http://quote.eastmoney.com/stocklist.html',   # obselete
@@ -33,6 +37,7 @@ dbtables = {
     'stock_company_general_info_eastmoney':'DD_stock_company_general_info_eastmoney',
     'stock_company_issuance_info_eastmoney':'DD_stock_company_issuance_info_eastmoney',
     'stock_dividend_cninfo':'DD_stock_dividend_cninfo',
+    'stock_dailybar_tquant': 'DD_stock_dailybar_Tquant',
     'stock_fhsp_sina': 'DD_stock_fhsp_sina',  # TODO
     'stock_fhsp_eastmoney': 'DD_stock_fhsp_eastmoney',    # TODO
 }
@@ -136,8 +141,15 @@ scheduleman = {
     'fetch_stock_company_general_info_from_eastmoney':{
         'rule': 'W',
         'weekdays': [2,]  # wednesday
-    }
-
+    },
+    'fetch_stock_dailybar_from_tquant':{
+        'rule': 'W',
+        'weekdays': [0, 1, 2, 3, 4, ]  # monday to Friday
+    },
+    'fetch_stock_dividend_from_cninfo':{
+        'rule': 'W',
+        'weekdays': [0, 2, 4, ]  # Monday,wednesday,Friday
+    },
 }
 
 # the date which shouldn't run the job

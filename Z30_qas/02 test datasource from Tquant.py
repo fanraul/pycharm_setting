@@ -52,5 +52,7 @@ import datetime
 # yesterday = today - datetime.timedelta(days =1)
 # print(gt.get_calendar(yesterday,today))
 
-print(gt.get_dividend('300020'))
-print(gt.get_allotment('300020'))
+# print(gt.get_dividend('300020'))
+# print(gt.get_allotment('300020'))
+
+gcf.dfmprint(mt.get_dailybars('SZSE.300712',begin_time = '2017-11-12',end_time='2017-11-14'))
