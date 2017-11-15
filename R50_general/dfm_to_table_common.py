@@ -2,7 +2,7 @@ import R50_general.general_constants
 from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
 from R50_general.general_helper_funcs import logprint
 import pandas as pd
-from pandas import Series, DataFrame
+from pandas import Series, DataFrame,Timedelta
 import numpy as np
 import R50_general.general_helper_funcs as gcf
 from datetime import datetime
@@ -269,7 +269,7 @@ def load_dfm_to_db_single_value_by_key_cols_w_hist(dt_key_cols:dict,dfm_data:Dat
                                 dif = abs(dfm_data.loc[ts_id][col]- dfm_db_data.loc[ts_id][tmp_colname])
                             except:
                                 dif = 1
-                            if dif >= 1. / 10**float_fix_decimal:
+                            if isinstance(dif, Timedelta) or dif >= 1. / 10**float_fix_decimal:
                                 ls_upt_cols.append(special_process_col_name(tmp_colname) + '=?')
                                 # convert numpy type to stanard data type if required.
                                 ls_upt_pars.append(pandas_numpy_type_convert_to_standard(dfm_data.loc[ts_id][col]))
@@ -651,7 +651,7 @@ def load_dfm_to_db_single_value_by_key_cols_cur(dt_key_cols:dict,dfm_data:DataFr
                             dif = abs(dfm_data.iloc[0][col] - s_db_data_max_ts[tmp_colname])
                         except:
                             dif = 1.
-                        if dif >= 1. / 10 ** float_fix_decimal:
+                        if isinstance(dif, Timedelta) or dif >= 1. / 10 ** float_fix_decimal:
                             # cur data is different from db data of latest transaction datetime
                             ins_flg = True
                             break
@@ -832,7 +832,7 @@ def load_dfm_to_db_single_value_by_key_cols_wo_datetime(dt_key_cols:dict,dfm_dat
                             dif = abs(dfm_data.iloc[0][col] - s_db_data[tmp_colname])
                         except:
                             dif = 1.
-                        if dif >= 1. / 10 ** float_fix_decimal:
+                        if isinstance(dif, Timedelta) or dif >= 1. / 10 ** float_fix_decimal:
                             # cur data is different from db data of latest transaction datetime
                             db_flg = 'UPDATE'
                             break
