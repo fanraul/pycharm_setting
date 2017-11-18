@@ -2,7 +2,7 @@ from datetime import datetime
 Global_Job_Log_Base_Direction = 'C:/00_RichMinds/log/'
 
 # the earliset dailybar date time, in dev, it's currently it is 2014-1-1.
-Global_dailybar_begin_date = datetime(2015,1,1).date()
+Global_dailybar_begin_date = datetime(2017,1,1).date()
 
 weblinks = {
     'stock_list_easymoney': 'http://quote.eastmoney.com/stocklist.html',   # obselete
@@ -16,6 +16,7 @@ weblinks = {
     'stock_shareholder_eastmoney':'http://emweb.securities.eastmoney.com/PC_HSF10/ShareholderResearch/ShareholderResearchAjax?code=%s',
     'stock_general_info_eastmoney':'http://emweb.securities.eastmoney.com/PC_HSF10/CompanySurvey/CompanySurveyAjax?code=%s',
     'stock_dividend_cninfo':'http://www.cninfo.com.cn/information/dividend/%(market_id)s%(stock_id)s.html',
+    'stock_dailybar_netease':'http://quotes.money.163.com/service/chddata.html?code=%s&start=%s&end=%s&fields=TCLOSE;HIGH;LOW;TOPEN;LCLOSE;CHG;PCHG;TURNOVER;VOTURNOVER;VATURNOVER;TCAP;MCAP',
 }
 
 
@@ -40,6 +41,7 @@ dbtables = {
     'stock_dailybar_tquant': 'DD_stock_dailybar_Tquant',
     'stock_fhsp_sina': 'DD_stock_fhsp_sina',  # TODO
     'stock_fhsp_eastmoney': 'DD_stock_fhsp_eastmoney',    # TODO
+    'stock_dailybar_netease':'DD_stock_dailybar_netease',
 }
 dbtemplate_stock_date = """
 CREATE TABLE [%(table)s](

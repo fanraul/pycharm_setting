@@ -58,7 +58,7 @@ def setup_log_file(jobname:str):
     log_file = log_folder + jobname + '_' + log_timestamp + '.txt'
     log_file_inconsistency = log_folder + jobname + '_inconsistency' + '_' + log_timestamp + '.txt'
 
-def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False):
+def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False,decode=''):
     """
 
     :param weblink_str: str of web link to web scrap
@@ -73,17 +73,20 @@ def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False):
     req.add_header('Referer',weblink_str)
     try:
         time.sleep(time_wait)
-        print('web page %s loading start..' %weblink_str)
+        logprint('web page %s loading start..' %weblink_str)
         response = urllib.request.urlopen(req)
         html = response.read()
-        print('web page loading end..')
+        logprint('web page loading end..')
 
         # leave it here for future if required.
         # sohu的网页编码有问题，直接解析会丢失html的body，要用errors等于ignore忽略解码错误后，再进行解析。
         # str_html = html.decode("gbk", errors='ignore')
 
         if flg_return_json:
-            return html.decode()
+            if decode == '':
+                return html.decode()
+            else:
+                return html.decode(decode, errors='ignore')
         soup = BeautifulSoup(html,"lxml")
     #        print (soup.prettify())
         return soup
@@ -310,6 +313,8 @@ def get_last_trading_day(market_id:str='SH'):
     # use index 000001 上证指数 to get the last tradin day
     if market_id in ('','SH','SZ'):
         dfm_000001 = ts.get_k_data('000001',index=True)
+        if len(dfm_000001) == 0:
+            assert False,'Can not get last trading day! '
         last_trading_day = datetime.strptime(dfm_000001.iloc[len(dfm_000001) - 1]['date'],'%Y-%m-%d')
 
     return last_trading_day.date()

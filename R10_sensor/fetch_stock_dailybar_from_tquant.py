@@ -77,7 +77,7 @@ def fetch2DB(stockid:str):
             # gcf.dfmprint(dfm_stk_info)
             df2db.load_dfm_to_db_single_value_by_mkt_stk_w_hist(row['Market_ID'], row['Stock_ID'], dfm_stk_info, table_name,
                                                                 dict_misc_pars,
-                                                                processing_mode='w_update',float_fix_decimal=2)
+                                                                processing_mode='w_update',float_fix_decimal=2,partial_ind= True)
 
     if stockid =='':
         df2db.updateDB_last_fetch_date(global_module_name,last_trading_datetime)
