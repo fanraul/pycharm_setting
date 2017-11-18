@@ -15,7 +15,8 @@ from R10_sensor import (fetch_stock_fin_reports_from_tquant,
                         fetch_stock_shareholder_from_eastmoney,
                         fetch_stock_company_general_info_from_eastmoney,
                         fetch_stock_dailybar_from_tquant,
-                        fetch_stock_dividend_from_cninfo,)
+                        fetch_stock_dividend_from_cninfo,
+                        fetch_stock_dailybar_from_netease,)
 
 import R50_general.general_helper_funcs as gcf
 import R50_general.advanced_helper_funcs as ahf
@@ -89,6 +90,11 @@ if __name__ == '__main__':
         ahf.func_call_as_job_with_trace(fetch_stock_dailybar_from_tquant.auto_reprocess,
                                  program_name='fetch_stock_dailybar_from_tquant',processed_set=processed_set)
         append_processed_prog_log(program_name='fetch_stock_dailybar_from_tquant')
+
+        # step 71: get stock dailybar 股票每日蜡烛图数据 网易
+        ahf.func_call_as_job_with_trace(fetch_stock_dailybar_from_netease.auto_reprocess,
+                                 program_name='fetch_stock_dailybar_from_netease',processed_set=processed_set)
+        append_processed_prog_log(program_name='fetch_stock_dailybar_from_netease')
 
         # step 80: get stock divident 分红送转信息
         ahf.func_call_as_job_with_trace(fetch_stock_dividend_from_cninfo.auto_reprocess,

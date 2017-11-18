@@ -142,11 +142,15 @@ scheduleman = {
     },
     'fetch_stock_company_general_info_from_eastmoney':{
         'rule': 'W',
-        'weekdays': [2,]  # wednesday
+        'weekdays': [4,]  # Friday
     },
     'fetch_stock_dailybar_from_tquant':{
         'rule': 'W',
-        'weekdays': [0, 1, 2, 3, 4, ]  # monday to Friday
+        'weekdays': [5, ]  # Saturday
+    },
+    'fetch_stock_dailybar_from_netease': {
+        'rule': 'W',
+        'weekdays': [5, ]  # Saturday
     },
     'fetch_stock_dividend_from_cninfo':{
         'rule': 'W',
