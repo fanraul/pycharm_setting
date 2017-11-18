@@ -14,6 +14,9 @@ import R50_general.advanced_helper_funcs as ahf
 import tquant.myquant as mt
 
 global_module_name = 'fetch_stock_dailybar_from_tquant'
+last_trading_datetime = gcf.get_last_trading_daytime()
+last_trading_date = last_trading_datetime.date()
+last_fetch_date = df2db.get_last_fetch_date(global_module_name, format='date')
 
 def fetch2DB(stockid:str):
     # init step
@@ -41,9 +44,6 @@ def fetch2DB(stockid:str):
 
     # step2.1: get current stock list
     dfm_stocks = df2db.get_cn_stocklist(stockid)
-    last_trading_datetime = gcf.get_last_trading_daytime()
-    last_trading_date = last_trading_datetime.date()
-    last_fetch_date = df2db.get_last_fetch_date(global_module_name,format ='date')
 
     if last_fetch_date and last_fetch_date >= last_trading_date:
         logprint('No need to fetch dialybar since last_fetch_date %s is later than or equal to last trading date %s' %(last_fetch_date,last_trading_date))
@@ -84,6 +84,8 @@ def fetch2DB(stockid:str):
 
 def auto_reprocess():
     ahf.auto_reprocess_dueto_ipblock(identifier=global_module_name, func_to_call=fetch2DB, wait_seconds=60)
+    logprint('Update last fetch date as %s' % last_trading_datetime)
+    df2db.updateDB_last_fetch_date(global_module_name, last_trading_datetime)
 
 if __name__ == '__main__':
     # fetch2DB('300692')

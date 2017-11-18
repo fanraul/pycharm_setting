@@ -989,6 +989,7 @@ def get_last_fetch_date(program_name:str, format ='datetime'):
 
 def updateDB_last_fetch_date(program_name,fetch_datetime):
     dfm1 = DataFrame([{'program_name':program_name,'last_fetch_date':fetch_datetime}])
+    print(dfm1)
     key_cols = ['program_name']
     dfm_to_db_insert_or_update(dfm1,key_cols,'DZ_scrap_job_last_fetch_date',program_name)
 
