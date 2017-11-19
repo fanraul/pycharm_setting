@@ -411,54 +411,6 @@ def set_dict_misc_pars(char_origin,char_freq,allow_multiple,update_by,char_usage
     dict_misc_pars['char_usage'] = char_usage
     return dict_misc_pars.copy()
 
-if __name__ == "__main__":
-    # print(get_cn_stocklist())
-    # print(get_chars('Tquant',['FIN10','FIN20','FIN30']))
-    # create_table_by_stock_date_template('hello123')
-    # dict_misc_pars = {}
-    # dict_misc_pars['char_origin'] = 'Tquant'
-    # dict_misc_pars['char_freq'] = "D"
-    # dict_misc_pars['allow_multiple'] ='N'
-    # dict_misc_pars['created_by'] = 'fetch_stock_3fin_report_from_tquant'
-    # dict_misc_pars['char_usage'] = 'FIN10'
-    # add_new_chars_and_cols({'test1':'decimal(18,2)','test2':'decimal(18,2)'},[],'stock_fin_balance_1',dict_misc_pars)
-    # dfm_temp = DataFrame([{'A':'1997-1-3','B':2,'C':'12.23'},{'A':'1997-1-4','B':3,'C':'12.35'}],index=['2017-1-1','2017-1-2'])
-    # print(dfm_temp)
-    # dfm_col_type_conversion(dfm_temp,index= 'datetime',columns={'A': 'datetime','B':'varchar(50)','C':'double(18,6)'})
-    # print(dfm_temp)
-    # print(list(dfm_temp.index))
-    # print(type(dfm_temp.iloc[0][0]), type(dfm_temp.iloc[0][1]),type(dfm_temp.iloc[0][2]))
-    # dfm1 = DataFrame([{'A':'A1','B':'B1','C':'C1'},{'A':'A2','B':'B2','C':'C2'},{'A':'A3','B':'B3','C':'C3'},])
-    # dfm2 = DataFrame([{'A':'A1','B':'B1','C':'C1'},{'A':'A2','B':'B4','C':'C4'},{'A':'A3','B':'B3','C':'C5'},])
-    # # dfm2 = DataFrame(columns = ['A', 'B', 'C', 'D'] )
-    # print(dfm1,dfm2,sep='\n')
-    # print(dfm_A_minus_B(dfm1,dfm2,key_cols = ['A','B']))
-    # print(dfm_A_intersect_B(dfm1,dfm2,key_cols=['A','B']))
-
-    # dfm4 = DataFrame(
-    #     [{'A': 'A1', 'B': 'B1', 'C': 'C1'}, {'A': 'A2', 'B': 'B2', 'C': 'C2'}, {'A': 'A3', 'B': 'B3', 'C': 'C3'}, ])
-    #
-    # for index,row in dfm4.iterrows():
-    #     print(index,type(index))
-    #     print(row,type(row))
-
-    # 7.test for get_last_trading_day
-    # print(get_last_trading_day())
-    # 8.test for func func_call_with_trace
-    # dt_args_w_name={}
-    # dt_args_w_name['sep'] = ','
-    # func_call_with_trace(print,'this is a test','hello',dt_args_w_name = dt_args_w_name)
-    # func_call_with_trace(print_list_nice, [(1,2)]*1000000)
-
-    # 8.test for send_email
-    send_email('terry.fan@sparkleconsulting.com;fanraul@icloud.com', 'email test',
-               'this is a test for email attachement',
-               ['C:/00_RichMinds/Github/RichMinds/sensor_mainjob.py','C:/00_RichMinds/Github/RichMinds/README.md'])
-
-    # print(isStrNumber('123.3'))
-    # print(isStrNumber('123.3.4'))
-
-
 def parse_chinese_uom(par:str):
     # print(par,len(par),type(par))
     if not par:
@@ -511,3 +463,176 @@ def intN(i:str):
         i = i.replace(',','')
         i = i.replace('.00','')
         return int(i)
+
+def get_stock_current_trading_info_sina(mktstks,return_format,batch_size = 40):
+    # TODO new functions need to be developed based on future usage, currently only work for one mktstk and return one dfm.
+    """
+    This function is a common interface to get stock current transaction info from SINA. Since it can be used in many ways,
+    we use return_format to return the proper format to fit call program's request .
+    :param mktstks: if string, it is one market_stockid, eg.'SZ300712',
+                    if list, it is a list of mktstkids, eg. ['SZ300712','SZ300169']
+    :return_format: a paramter to control the return parameter formating.
+    :return: 'close_daily_fetch'-> return a dfm, index = col30(datetime format), value = col1 to col32,
+    """
+
+    if type(mktstks) == str:
+        mktstks = [mktstks]
+
+    mktskts = [x.lower() for x in mktstks]
+
+    ls_col_name = ['股票名称',
+                   'open',
+                   '前收盘',
+                   'close',
+                   'high',
+                   'low',
+                   '竞买价',
+                   '竞卖价',
+                   'vol',
+                   'amount',
+                   '买一量',
+                   '买一价',
+                   '买二量',
+                   '买二价',
+                   '买三量',
+                   '买三价',
+                   '买四量',
+                   '买四价',
+                   '买五量',
+                   '买五价',
+                   '卖一量',
+                   '卖一价',
+                   '卖二量',
+                   '卖二价',
+                   '卖三量',
+                   '卖三价',
+                   '卖四量',
+                   '卖四价',
+                   '卖五量',
+                   '卖五价',
+                   '交易日期',
+                   '交易时间',
+                   'unknown',
+                   ]
+
+    ls_dfm_trans_info =[]
+    ls_index_mktstk =[]
+    ls_index_transdate = []
+    ls_index_transdatetime =[]
+
+    loopnum = len(mktskts) // batch_size
+    for i in range(loopnum+1):
+        mktstks_slice = mktskts[i*batch_size:(i+1)*batch_size]
+        if mktstks_slice:
+            str_mktstks = ','.join(mktstks_slice)
+            url = gc.weblinks['stock_dailybar_sina'] %str_mktstks
+            str_transinfos = get_webpage(url,flg_return_json=True,decode='gbk')
+            ls_str_transinfo = str_transinfos.split(';\n')
+            # print(ls_str_transinfo)
+            for line_transinfo in ls_str_transinfo:
+                dt_transinfo = {}
+                line_transinfo = line_transinfo.replace('"','').replace('var hq_str_','')
+                ls_tmp = line_transinfo.split('=')
+                if len(ls_tmp) == 2:
+                    ls_trans_dtl = ls_tmp[1].split(',')
+                    str_mktstk = ls_tmp[0]
+                    if ls_trans_dtl and len(ls_trans_dtl) == 33:
+                        dt_transinfo ={x:y for x,y in map(lambda x,y: (x,y),ls_col_name,ls_trans_dtl)}
+                        dt_transinfo['数据刷新时间'] = ls_trans_dtl[30]+' '+ls_trans_dtl[31]
+                        ls_dfm_trans_info.append(dt_transinfo)
+                        ls_index_mktstk.append(str_mktstks.upper())
+                        ls_index_transdate.append(datetime.strptime(ls_trans_dtl[30],'%Y-%m-%d'))
+                        ls_index_transdatetime.append(datetime.strptime(ls_trans_dtl[30]+' '+ls_trans_dtl[31],'%Y-%m-%d %H:%M:%S'))
+
+
+    if len(ls_dfm_trans_info) > 0:
+        if return_format == 'close_daily_fetch':
+            return DataFrame(ls_dfm_trans_info,index=ls_index_transdate)
+        else:
+            assert False, 'return_format %s not yet developed!' %return_format
+    else:
+        return DataFrame()
+
+'''
+    var hq_str_sh600461="洪城水业,6.380,6.380,6.210,6.390,6.200,6.200,6.210,4541360,28556823.000,44200,6.200,8700,6.190,13600,6.180,2000,6.170,2000,6.160,2200,6.210,8300,6.220,14900,6.230,19472,6.240,19700,6.250,2017-11-17,15:00:00,00";
+    var hq_str_sz300712="永福股份,33.090,33.020,30.150,33.580,29.900,30.140,30.150,7158146,224001829.750,10900,30.140,4800,30.130,2400,30.120,11200,30.100,2400,30.080,16467,30.150,1200,30.160,3600,30.180,5100,30.190,2700,30.200,2017-11-17,16:29:03,00";
+    
+    大秦铁路,8.800,8.790,9.030,9.060,8.700,9.030,9.040,109367311,971205411.000,73530,9.030,895919,9.020,555200,9.010,29700,9.000,137700,8.990,256000,9.040,772531,9.050,1108457,9.060,269100,9.070,248000,9.080,2017-11-17,15:00:00,00
+    0：”大秦铁路”，股票名称；
+    1：”27.55″，open；
+    2：”27.25″，前收盘；
+    3：”26.91″，close；
+    4：”27.55″，high；
+    5：”26.20″，low；
+    6：”26.91″，竞买价；
+    7：”26.92″，竞卖价；
+    8：”22114263″，vol, 成交的股票数，由于股票交易以一百股为基本单位，所以在使用时，通常把该值除以一百；
+    9：”589824680″，amount,成交金额，单位为“元”，为了一目了然，通常以“万元”为成交金额的单位，所以通常把该值除以一万；
+    10：”4695″，“买一量”,申请4695股，即47手；
+    11：”26.91″，“买一价”,报价；
+    12：”57590″，“买二量”
+    13：”26.90″，“买二价”
+    14：”14700″，“买三量”
+    15：”26.89″，“买三价”
+    16：”14300″，“买四量”
+    17：”26.88″，“买四价”
+    18：”15100″，“买五量”
+    19：”26.87″，“买五价”
+    20：”3100″，卖一量,“卖一”申报3100股，即31手；
+    21：”26.92″，“卖一价”
+    (22, 23), 卖二量,卖二价 
+    (24, 25), 卖三量,卖三价
+    (26, 27), 卖四量,卖四价
+    (28, 29), 卖五量,卖五价
+    30：”2008-01-11″，交易日期；
+    31：”15:05:32″，交易时间；
+    32: "00",unkown col
+'''
+
+if __name__ == "__main__":
+    # print(get_cn_stocklist())
+    # print(get_chars('Tquant',['FIN10','FIN20','FIN30']))
+    # create_table_by_stock_date_template('hello123')
+    # dict_misc_pars = {}
+    # dict_misc_pars['char_origin'] = 'Tquant'
+    # dict_misc_pars['char_freq'] = "D"
+    # dict_misc_pars['allow_multiple'] ='N'
+    # dict_misc_pars['created_by'] = 'fetch_stock_3fin_report_from_tquant'
+    # dict_misc_pars['char_usage'] = 'FIN10'
+    # add_new_chars_and_cols({'test1':'decimal(18,2)','test2':'decimal(18,2)'},[],'stock_fin_balance_1',dict_misc_pars)
+    # dfm_temp = DataFrame([{'A':'1997-1-3','B':2,'C':'12.23'},{'A':'1997-1-4','B':3,'C':'12.35'}],index=['2017-1-1','2017-1-2'])
+    # print(dfm_temp)
+    # dfm_col_type_conversion(dfm_temp,index= 'datetime',columns={'A': 'datetime','B':'varchar(50)','C':'double(18,6)'})
+    # print(dfm_temp)
+    # print(list(dfm_temp.index))
+    # print(type(dfm_temp.iloc[0][0]), type(dfm_temp.iloc[0][1]),type(dfm_temp.iloc[0][2]))
+    # dfm1 = DataFrame([{'A':'A1','B':'B1','C':'C1'},{'A':'A2','B':'B2','C':'C2'},{'A':'A3','B':'B3','C':'C3'},])
+    # dfm2 = DataFrame([{'A':'A1','B':'B1','C':'C1'},{'A':'A2','B':'B4','C':'C4'},{'A':'A3','B':'B3','C':'C5'},])
+    # # dfm2 = DataFrame(columns = ['A', 'B', 'C', 'D'] )
+    # print(dfm1,dfm2,sep='\n')
+    # print(dfm_A_minus_B(dfm1,dfm2,key_cols = ['A','B']))
+    # print(dfm_A_intersect_B(dfm1,dfm2,key_cols=['A','B']))
+
+    # dfm4 = DataFrame(
+    #     [{'A': 'A1', 'B': 'B1', 'C': 'C1'}, {'A': 'A2', 'B': 'B2', 'C': 'C2'}, {'A': 'A3', 'B': 'B3', 'C': 'C3'}, ])
+    #
+    # for index,row in dfm4.iterrows():
+    #     print(index,type(index))
+    #     print(row,type(row))
+
+    # 7.test for get_last_trading_day
+    # print(get_last_trading_day())
+    # 8.test for func func_call_with_trace
+    # dt_args_w_name={}
+    # dt_args_w_name['sep'] = ','
+    # func_call_with_trace(print,'this is a test','hello',dt_args_w_name = dt_args_w_name)
+    # func_call_with_trace(print_list_nice, [(1,2)]*1000000)
+
+    # 8.test for send_email
+    # send_email('terry.fan@sparkleconsulting.com;fanraul@icloud.com', 'email test',
+    #            'this is a test for email attachement',
+    #            ['C:/00_RichMinds/Github/RichMinds/sensor_mainjob.py','C:/00_RichMinds/Github/RichMinds/README.md'])
+
+    # print(isStrNumber('123.3'))
+    # print(isStrNumber('123.3.4'))
+    get_stock_current_trading_info_sina(['sz300712','sz300619'],return_format=1)

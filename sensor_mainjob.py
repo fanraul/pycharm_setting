@@ -16,7 +16,8 @@ from R10_sensor import (fetch_stock_fin_reports_from_tquant,
                         fetch_stock_company_general_info_from_eastmoney,
                         fetch_stock_dailybar_from_tquant,
                         fetch_stock_dividend_from_cninfo,
-                        fetch_stock_dailybar_from_netease,)
+                        fetch_stock_dailybar_from_netease,
+                        fetch_stock_current_dailybar_from_sina,)
 
 import R50_general.general_helper_funcs as gcf
 import R50_general.advanced_helper_funcs as ahf
@@ -56,15 +57,26 @@ if __name__ == '__main__':
                                         program_name='fetch_stocklist_from_Tquant',processed_set=processed_set)
         append_processed_prog_log(program_name='fetch_stocklist_from_Tquant')
 
-        # step 11: update stock company general info, 股本信息.
+        # step11: update stock daily bar current info from sina 股票每日交易数据
+        ahf.func_call_as_job_with_trace(fetch_stock_current_dailybar_from_sina.auto_reprocess,
+                                        program_name='fetch_stock_current_dailybar_from_sina',
+                                        processed_set=processed_set)
+        append_processed_prog_log(program_name='fetch_stock_current_dailybar_from_sina')
+
+        # step 12: update stock company general info, 股本信息.
         ahf.func_call_as_job_with_trace(fetch_stock_company_general_info_from_eastmoney.auto_reprocess,
                                         program_name='fetch_stock_company_general_info_from_eastmoney',processed_set=processed_set)
         append_processed_prog_log(program_name='fetch_stock_company_general_info_from_eastmoney')
 
-        # step 20: update qq category info
-        ahf.func_call_as_job_with_trace(fetch_stock_category_and_daily_status_from_qq.fetch2DB,
-                                 program_name='fetch_stock_category_and_daily_status_from_qq',processed_set=processed_set)
-        append_processed_prog_log(program_name='fetch_stock_category_and_daily_status_from_qq')
+        # step 20: get stock dailybar 股票每日蜡烛图数据
+        ahf.func_call_as_job_with_trace(fetch_stock_dailybar_from_tquant.auto_reprocess,
+                                 program_name='fetch_stock_dailybar_from_tquant',processed_set=processed_set)
+        append_processed_prog_log(program_name='fetch_stock_dailybar_from_tquant')
+
+        # step 21: get stock dailybar 股票每日蜡烛图数据 网易
+        ahf.func_call_as_job_with_trace(fetch_stock_dailybar_from_netease.auto_reprocess,
+                                 program_name='fetch_stock_dailybar_from_netease',processed_set=processed_set)
+        append_processed_prog_log(program_name='fetch_stock_dailybar_from_netease')
 
         # step 30: update eastmoney core concept
         ahf.func_call_as_job_with_trace(fetch_stock_core_concept_from_eastmoney.auto_reprocess,
@@ -86,20 +98,15 @@ if __name__ == '__main__':
                                  program_name='fetch_stock_shareholder_from_eastmoney',processed_set=processed_set)
         append_processed_prog_log(program_name='fetch_stock_shareholder_from_eastmoney')
 
-        # step 70: get stock dailybar 股票每日蜡烛图数据
-        ahf.func_call_as_job_with_trace(fetch_stock_dailybar_from_tquant.auto_reprocess,
-                                 program_name='fetch_stock_dailybar_from_tquant',processed_set=processed_set)
-        append_processed_prog_log(program_name='fetch_stock_dailybar_from_tquant')
-
-        # step 71: get stock dailybar 股票每日蜡烛图数据 网易
-        ahf.func_call_as_job_with_trace(fetch_stock_dailybar_from_netease.auto_reprocess,
-                                 program_name='fetch_stock_dailybar_from_netease',processed_set=processed_set)
-        append_processed_prog_log(program_name='fetch_stock_dailybar_from_netease')
-
         # step 80: get stock divident 分红送转信息
         ahf.func_call_as_job_with_trace(fetch_stock_dividend_from_cninfo.auto_reprocess,
                                  program_name='fetch_stock_dividend_from_cninfo',processed_set=processed_set)
         append_processed_prog_log(program_name='fetch_stock_dividend_from_cninfo')
+
+        # step 90: update qq category info
+        ahf.func_call_as_job_with_trace(fetch_stock_category_and_daily_status_from_qq.fetch2DB,
+                                 program_name='fetch_stock_category_and_daily_status_from_qq',processed_set=processed_set)
+        append_processed_prog_log(program_name='fetch_stock_category_and_daily_status_from_qq')
 
 
         # step 900: update stock structure info, 股本信息.
