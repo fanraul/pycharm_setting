@@ -154,7 +154,7 @@ scheduleman = {
         'rule': 'W',
         'weekdays': [0,1,2,3,4, ]  # monday to Friday
     },
-    'fetch_stock_dailybar_from_sina': {
+    'fetch_stock_current_dailybar_from_sina': {
         'rule': 'W',
         'weekdays': [0,1,2,3,4, ]  # monday to Friday
     },
@@ -162,7 +162,6 @@ scheduleman = {
         'rule': 'W',
         'weekdays': [0, 2, 4, ]  # Monday,wednesday,Friday
     },
-
 }
 
 # the date which shouldn't run the job
