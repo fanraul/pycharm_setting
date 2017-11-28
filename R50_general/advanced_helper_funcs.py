@@ -17,7 +17,7 @@ def getweekday():
 
     # overwrite weekday as certain date for re-processing only***********************
     # for example, reprocess at Saturday and assume it it Friday.
-    weekday = 6
+    #weekday = 6
     #********************************************************************************
     return weekday
 
