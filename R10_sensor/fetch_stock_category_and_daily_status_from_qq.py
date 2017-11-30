@@ -82,8 +82,9 @@ def fetch2DB():
     # inform obsolete category to user to make sure no error occures,no action in db side
     dfm_obselete_catg = gcf.dfm_A_minus_B(dfm_db_catg, dfm_cur_catg,  ['Catg_Origin', 'Catg_Type', 'Catg_Name'])
     if len(dfm_obselete_catg) > 0:
-        for index,row in dfm_obselete_catg:
-            logprint('Category Type %s Name %s is obselete! Please double check!' %(row['Catg_Type'],row['Catg_name']))
+        # print(dfm_obselete_catg)
+        for index,row in dfm_obselete_catg.iterrows():
+            logprint('Category Type %s Name %s is obselete! Please double check!' %(row['Catg_Type'],row['Catg_Name']))
 
 
     # 2.2 insert new stock category relationship into DB
