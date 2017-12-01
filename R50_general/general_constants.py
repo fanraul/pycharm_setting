@@ -18,6 +18,8 @@ weblinks = {
     'stock_dividend_cninfo':'http://www.cninfo.com.cn/information/dividend/%(market_id)s%(stock_id)s.html',
     'stock_dailybar_netease':'http://quotes.money.163.com/service/chddata.html?code=%s&start=%s&end=%s&fields=TCLOSE;HIGH;LOW;TOPEN;LCLOSE;CHG;PCHG;TURNOVER;VOTURNOVER;VATURNOVER;TCAP;MCAP',
     'stock_dailybar_sina':'http://hq.sinajs.cn/list=%s',
+    'stock_newslist_jd':'http://gupiao.jd.com/index/newsList.html?pageSize=10&pageNum=%s', #沪深股票资讯
+    'jd_stock_news_details_prefix':'http://gupiao.jd.com/',
 }
 
 
