@@ -58,7 +58,7 @@ def setup_log_file(jobname:str):
     log_file = log_folder + jobname + '_' + log_timestamp + '.txt'
     log_file_inconsistency = log_folder + jobname + '_inconsistency' + '_' + log_timestamp + '.txt'
 
-def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False,decode=''):
+def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False,decode='',flg_return_rawhtml = False):
     """
 
     :param weblink_str: str of web link to web scrap
@@ -78,13 +78,16 @@ def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False,decode='
         html = response.read()
         logprint('web page loading end..')
 
+        if flg_return_rawhtml:
+            return html
+
         # leave it here for future if required.
         # sohu的网页编码有问题，直接解析会丢失html的body，要用errors等于ignore忽略解码错误后，再进行解析。
         # str_html = html.decode("gbk", errors='ignore')
 
         if flg_return_json:
             if decode == '':
-                return html.decode()
+                return html.decode(errors='ignore')
             else:
                 return html.decode(decode, errors='ignore')
         soup = BeautifulSoup(html,"lxml")

@@ -13,10 +13,15 @@ import R50_general.general_helper_funcs as gcf
 from R50_general.general_helper_funcs import logprint
 import R50_general.dfm_to_table_common as df2db
 
-global_module_name = 'fetch_stock_news_from_jd'
+global_module_name = 'fetch_stock_news_list_from_jd'
+pages_to_fetch = 1
 
+def fetch_newslist():
 
-def fetch_newslist(pages):
+    dfm_newslist = parse_newslist(pages_to_fetch)
+    dfm_newslist.to_excel('newslist.xls')
+
+def parse_newslist(pages)-> DataFrame  :
     logprint('Get JD stock news first %s pages:' %pages)
     ls_dfmnewslist = []
     for i in range(pages):
@@ -26,16 +31,16 @@ def fetch_newslist(pages):
         if soup_newslist:
             body_newslist = soup_newslist.find_all('li',class_ = "clearfix")
             for newslink in body_newslist:
+                str_news_link = newslink.div.a.get('href').strip()
                 dt_newslink ={}
                 dt_newslink['title'] = newslink.div.a.string.strip()
-                dt_newslink['weblink'] = url_prefix_newsdetail + newslink.div.a.get('href').strip()
-                dt_newslink['news_datetime'] = newslink.find_all('span',"date-time")[0].string.strip()
+                dt_newslink['weblink'] = url_prefix_newsdetail + str_news_link
+                dt_newslink['news_datetime'] = datetime.strptime('20'+ newslink.find_all('span',"date-time")[0].string.strip(),'%Y-%m-%d %H:%M')
+                dt_newslink['news_id'] = re.findall('detail-([0-9]+).html',str_news_link)[0]
                 ls_dfmnewslist.append(dt_newslink)
-    dfm_newslist = DataFrame(ls_dfmnewslist)
-    dfm_newslist.to_excel('newslist.xls')
+    return DataFrame(ls_dfmnewslist)
 
     # for index,row in dfm_newslist.iterrows():
-
 
 
 '''
@@ -53,4 +58,4 @@ def fetch_newslist(pages):
 '''
 
 if __name__ == '__main__':
-    fetch_newslist(50)
+    fetch_newslist()

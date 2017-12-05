@@ -1,6 +1,6 @@
 from datetime import datetime
 Global_Job_Log_Base_Direction = 'C:/00_RichMinds/log/'
-
+Global_path_news_details_jd = 'C:\\80_Business_docs\\news\\jd\\'
 # the earliset dailybar date time, in dev, it's currently it is 2014-1-1.
 Global_dailybar_begin_date = datetime(2017,1,1).date()
 
@@ -19,7 +19,7 @@ weblinks = {
     'stock_dailybar_netease':'http://quotes.money.163.com/service/chddata.html?code=%s&start=%s&end=%s&fields=TCLOSE;HIGH;LOW;TOPEN;LCLOSE;CHG;PCHG;TURNOVER;VOTURNOVER;VATURNOVER;TCAP;MCAP',
     'stock_dailybar_sina':'http://hq.sinajs.cn/list=%s',
     'stock_newslist_jd':'http://gupiao.jd.com/index/newsList.html?pageSize=10&pageNum=%s', #沪深股票资讯
-    'jd_stock_news_details_prefix':'http://gupiao.jd.com/',
+    'jd_stock_news_details_prefix':'http://gupiao.jd.com',
 }
 
 
@@ -46,6 +46,7 @@ dbtables = {
     'stock_fhsp_eastmoney': 'DD_stock_fhsp_eastmoney',    # TODO
     'stock_dailybar_netease':'DD_stock_dailybar_netease',
     'stock_dailybar_sina': 'DD_stock_dailybar_sina',
+    'stock_newslist_jd':'DD_stock_newslist_jd',
 }
 dbtemplate_stock_date = """
 CREATE TABLE [%(table)s](
