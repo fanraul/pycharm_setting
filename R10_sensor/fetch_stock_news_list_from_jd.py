@@ -15,7 +15,7 @@ import R50_general.dfm_to_table_common as df2db
 from sqlalchemy.exc import IntegrityError
 
 global_module_name = 'fetch_stock_news_list_from_jd'
-general_pages_to_fetch = 5500
+general_pages_to_fetch = 100
 general_start_page = 0
 general_pages_to_split = 100
 
