@@ -6,6 +6,7 @@ from pandas import Series, DataFrame,Timedelta
 import numpy as np
 import R50_general.general_helper_funcs as gcf
 from datetime import datetime
+import time
 
 #initial steps:
 # step1: get DB connection
@@ -1040,7 +1041,8 @@ def dfm_to_db_insert_or_update(dfm_cur_data: DataFrame, key_cols: list, table_na
                 table_name, ins_str_cols, ins_str_pars)
             # print(ins_str)
             try:
-                conn.execute(ins_str, ls_ins_pars)
+                for ins_par in ls_ins_pars:
+                    conn.execute(ins_str, ins_par)
             except:
                 raise
 
@@ -1063,6 +1065,8 @@ def dfm_to_db_insert_or_update(dfm_cur_data: DataFrame, key_cols: list, table_na
             update_str = '''UPDATE %s SET %s 
                 WHERE %s ''' % (table_name, upt_str_cols, upt_str_keycols)
             conn.execute(update_str, tuple(ls_upt_pars))
+
+    # time.sleep(0)
 
 
 if __name__ == "__main__":

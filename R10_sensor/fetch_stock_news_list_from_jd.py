@@ -12,10 +12,12 @@ import R50_general.general_constants
 import R50_general.general_helper_funcs as gcf
 from R50_general.general_helper_funcs import logprint
 import R50_general.dfm_to_table_common as df2db
+from sqlalchemy.exc import IntegrityError
 
 global_module_name = 'fetch_stock_news_list_from_jd'
-pages_to_fetch = 1
-start_page = 0
+general_pages_to_fetch = 5500
+general_start_page = 0
+general_pages_to_split = 100
 
 def fetch2DB():
     # create jd news table
@@ -30,23 +32,30 @@ def fetch2DB():
     table_name = R50_general.general_constants.dbtables['newslist_jd']
     df2db.create_table_by_template(table_name,table_type='jd_newslist')
 
+    # update every general_pages_to_split pages
+    ls_dfmnews = []
+    webscrap_times = general_pages_to_fetch // general_pages_to_split
+    try:
+        for i in range(webscrap_times):
+            start_page_cur = i * general_pages_to_split + general_start_page
+            pages_to_fetch_cur = general_pages_to_split
 
-    dfm_newslist = parse_newslist(pages_to_fetch,start_page)
+            dfm_newslist = parse_newslist(pages_to_fetch_cur,start_page_cur)
+            dfm_newslist.drop_duplicates(subset = ['News_ID'],inplace=True)
 
-    if len(dfm_newslist) > 0:
-        dfm_newslist['Region_ID'] = 'CN'
-        df2db.dfm_to_db_insert_or_update(dfm_newslist, ['Region_ID','News_ID'], table_name, global_module_name, process_mode='wo_update')
-
-    dfm_newslist.to_excel('newslist.xls')
-
-
-
+            if len(dfm_newslist) > 0:
+                dfm_newslist['Region_ID'] = 'CN'
+                df2db.dfm_to_db_insert_or_update(dfm_newslist, ['Region_ID','News_ID'], table_name, global_module_name, process_mode='wo_update')
+            ls_dfmnews.append(dfm_newslist)
+    # except IntegrityError:
+    finally:
+        pd.concat(ls_dfmnews).to_excel('newslist.xls')
 
 def parse_newslist(pages,start_page)-> DataFrame  :
-    logprint('Get JD stock news first %s pages:' %pages)
+    logprint('Get JD stock news from pages %s to pages %s:' %(start_page,start_page+pages-1))
     ls_dfmnewslist = []
     for i in range(pages):
-        url_newslist_page = R50_general.general_constants.weblinks['stock_newslist_jd'] %(i+1+start_page)
+        url_newslist_page = R50_general.general_constants.weblinks['stock_newslist_jd'] %(i+start_page)
         url_prefix_newsdetail = R50_general.general_constants.weblinks['jd_stock_news_details_prefix']
         soup_newslist = gcf.get_webpage(url_newslist_page)
         if soup_newslist:
