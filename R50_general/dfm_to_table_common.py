@@ -105,6 +105,8 @@ def create_table_by_template(table_name:str,table_type:str):
             crt_str = R50_general.general_constants.dbtemplate_stock_wo_date % {'table':table_name.strip()}
         elif table_type == 'catg_date':
             crt_str = R50_general.general_constants.dbtemplate_catg_date % {'table': table_name.strip()}
+        elif table_type == 'jd_newslist':
+            crt_str = R50_general.general_constants.dbtemplate_jd_newslist % {'table': table_name.strip()}
         else:
             raise
         conn.execute(crt_str)

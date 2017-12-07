@@ -46,7 +46,7 @@ dbtables = {
     'stock_fhsp_eastmoney': 'DD_stock_fhsp_eastmoney',    # TODO
     'stock_dailybar_netease':'DD_stock_dailybar_netease',
     'stock_dailybar_sina': 'DD_stock_dailybar_sina',
-    'stock_newslist_jd':'DD_stock_newslist_jd',
+    'newslist_jd':'DD_newslist_jd',
 }
 dbtemplate_stock_date = """
 CREATE TABLE [%(table)s](
@@ -113,6 +113,26 @@ CREATE TABLE [%(table)s](
 ))
 """
 
+dbtemplate_jd_newslist = """
+CREATE TABLE [%(table)s](
+	[Region_ID] [nvarchar](50) NOT NULL,
+	[News_ID] [nvarchar] (20) NOT NULL,
+    [Title] [nvarchar] (400) NULL,
+    [Weblink] [nvarchar] (100) NULL,
+    [News_datetime] [datetime] NULL,
+	[Created_datetime] [datetime] NULL,
+	[Created_by] [nvarchar](50) NULL,
+	[Last_modified_datetime] [datetime] NULL,
+	[Last_modified_by] [nvarchar](50) NULL,
+	[News_downloaded] [char](1) NULL,
+	[News_parsed] [char](1) NULL,
+	[Ind_useless] [char](1) NULL,
+ CONSTRAINT [PK_%(table)s] PRIMARY KEY 
+(
+	[Region_ID] ASC,
+	[News_id] ASC
+))
+"""
 
 # the job sheduler for background programs
 # key is the program name

@@ -15,17 +15,38 @@ import R50_general.dfm_to_table_common as df2db
 
 global_module_name = 'fetch_stock_news_list_from_jd'
 pages_to_fetch = 1
+start_page = 0
 
-def fetch_newslist():
+def fetch2DB():
+    # create jd news table
+    dict_misc_pars = {}
+    dict_misc_pars['char_origin'] = 'JD'
+    dict_misc_pars['char_freq'] = "D"
+    dict_misc_pars['allow_multiple'] = 'Y'
+    dict_misc_pars['created_by'] = dict_misc_pars['update_by'] = global_module_name
+    dict_misc_pars['char_usage'] = 'NEWS'
 
-    dfm_newslist = parse_newslist(pages_to_fetch)
+    # check whether db table is created.
+    table_name = R50_general.general_constants.dbtables['newslist_jd']
+    df2db.create_table_by_template(table_name,table_type='jd_newslist')
+
+
+    dfm_newslist = parse_newslist(pages_to_fetch,start_page)
+
+    if len(dfm_newslist) > 0:
+        dfm_newslist['Region_ID'] = 'CN'
+        df2db.dfm_to_db_insert_or_update(dfm_newslist, ['Region_ID','News_ID'], table_name, global_module_name, process_mode='wo_update')
+
     dfm_newslist.to_excel('newslist.xls')
 
-def parse_newslist(pages)-> DataFrame  :
+
+
+
+def parse_newslist(pages,start_page)-> DataFrame  :
     logprint('Get JD stock news first %s pages:' %pages)
     ls_dfmnewslist = []
     for i in range(pages):
-        url_newslist_page = R50_general.general_constants.weblinks['stock_newslist_jd'] %(i+1)
+        url_newslist_page = R50_general.general_constants.weblinks['stock_newslist_jd'] %(i+1+start_page)
         url_prefix_newsdetail = R50_general.general_constants.weblinks['jd_stock_news_details_prefix']
         soup_newslist = gcf.get_webpage(url_newslist_page)
         if soup_newslist:
@@ -33,10 +54,10 @@ def parse_newslist(pages)-> DataFrame  :
             for newslink in body_newslist:
                 str_news_link = newslink.div.a.get('href').strip()
                 dt_newslink ={}
-                dt_newslink['title'] = newslink.div.a.string.strip()
-                dt_newslink['weblink'] = url_prefix_newsdetail + str_news_link
-                dt_newslink['news_datetime'] = datetime.strptime('20'+ newslink.find_all('span',"date-time")[0].string.strip(),'%Y-%m-%d %H:%M')
-                dt_newslink['news_id'] = re.findall('detail-([0-9]+).html',str_news_link)[0]
+                dt_newslink['Title'] = newslink.div.a.string.strip()
+                dt_newslink['Weblink'] = url_prefix_newsdetail + str_news_link
+                dt_newslink['News_datetime'] = datetime.strptime('20'+ newslink.find_all('span',"date-time")[0].string.strip(),'%Y-%m-%d %H:%M')
+                dt_newslink['News_ID'] = re.findall('detail-([0-9]+).html',str_news_link)[0]
                 ls_dfmnewslist.append(dt_newslink)
     return DataFrame(ls_dfmnewslist)
 
@@ -58,4 +79,4 @@ def parse_newslist(pages)-> DataFrame  :
 '''
 
 if __name__ == '__main__':
-    fetch_newslist()
+    fetch2DB()
