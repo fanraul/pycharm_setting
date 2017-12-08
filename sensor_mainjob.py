@@ -17,7 +17,9 @@ from R10_sensor import (fetch_stock_fin_reports_from_tquant,
                         fetch_stock_dailybar_from_tquant,
                         fetch_stock_dividend_from_cninfo,
                         fetch_stock_dailybar_from_netease,
-                        fetch_stock_current_dailybar_from_sina,)
+                        fetch_stock_current_dailybar_from_sina,
+                        fetch_stock_news_list_from_jd,
+                        )
 
 import R50_general.general_helper_funcs as gcf
 import R50_general.advanced_helper_funcs as ahf
@@ -77,6 +79,11 @@ if __name__ == '__main__':
         ahf.func_call_as_job_with_trace(fetch_stock_dailybar_from_netease.auto_reprocess,
                                  program_name='fetch_stock_dailybar_from_netease',processed_set=processed_set)
         append_processed_prog_log(program_name='fetch_stock_dailybar_from_netease')
+
+        # step 25: get news list from jd
+        ahf.func_call_as_job_with_trace(fetch_stock_news_list_from_jd.fetch2DB,
+                                 program_name='fetch_stock_news_list_from_jd',processed_set=processed_set)
+        append_processed_prog_log(program_name='fetch_stock_news_list_from_jd')
 
         # step 30: update eastmoney core concept
         ahf.func_call_as_job_with_trace(fetch_stock_core_concept_from_eastmoney.auto_reprocess,

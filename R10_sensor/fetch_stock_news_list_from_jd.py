@@ -15,7 +15,7 @@ import R50_general.dfm_to_table_common as df2db
 from sqlalchemy.exc import IntegrityError
 
 global_module_name = 'fetch_stock_news_list_from_jd'
-general_pages_to_fetch = 100
+general_pages_to_fetch = 200
 general_start_page = 0
 general_pages_to_split = 100
 
@@ -34,11 +34,14 @@ def fetch2DB():
 
     # update every general_pages_to_split pages
     ls_dfmnews = []
-    webscrap_times = general_pages_to_fetch // general_pages_to_split
+    webscrap_times = general_pages_to_fetch // general_pages_to_split + 1
     try:
         for i in range(webscrap_times):
             start_page_cur = i * general_pages_to_split + general_start_page
-            pages_to_fetch_cur = general_pages_to_split
+            if i == webscrap_times -1:
+                pages_to_fetch_cur = general_pages_to_fetch % general_pages_to_split
+            else:
+                pages_to_fetch_cur = general_pages_to_split
 
             dfm_newslist = parse_newslist(pages_to_fetch_cur,start_page_cur)
             dfm_newslist.drop_duplicates(subset = ['News_ID'],inplace=True)
@@ -57,7 +60,7 @@ def parse_newslist(pages,start_page)-> DataFrame  :
     for i in range(pages):
         url_newslist_page = R50_general.general_constants.weblinks['stock_newslist_jd'] %(i+start_page)
         url_prefix_newsdetail = R50_general.general_constants.weblinks['jd_stock_news_details_prefix']
-        soup_newslist = gcf.get_webpage(url_newslist_page)
+        soup_newslist = gcf.get_webpage_with_retry(url_newslist_page)
         if soup_newslist:
             body_newslist = soup_newslist.find_all('li',class_ = "clearfix")
             for newslink in body_newslist:

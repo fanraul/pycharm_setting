@@ -60,7 +60,6 @@ def setup_log_file(jobname:str):
 
 def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False,decode='',flg_return_rawhtml = False):
     """
-
     :param weblink_str: str of web link to web scrap
     :param time_wait: time to wait before open web link
     :param flg_return_json: True-> return str of repsonse,used in json senario
@@ -113,11 +112,25 @@ def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False,decode='
         # TODO urgent
         logprint('Exception http.client.RemoteDisconnected raised, Remote end closed connection without response')
         raise e
-
     except Exception as e:
         logprint("Weblink %s open failed error unkown:" % weblink_str, e,type(e))
         raise e
 
+def get_webpage_with_retry(weblink_str :str, try_num = 5, ignore_error = True, time_wait = 0, flg_return_json= False,decode='',
+                           flg_return_rawhtml = False,):
+    for i in range(try_num):
+        try:
+            return get_webpage(weblink_str,time_wait,flg_return_json,decode,flg_return_rawhtml)
+        except (urllib.error.HTTPError,urllib.error.URLError,http.client.RemoteDisconnected):
+            logprint('Web scrapping exception raised, auto reprocess after %s seconds. Current time is %s' % (time_wait,datetime.now()))
+        except json.decoder.JSONDecodeError:
+            logprint('JSONDecode exception raised, auto reprocess after %s seconds. Current time is %s' % (time_wait,datetime.now()))
+
+    if ignore_error:
+        logprint("%s can't be opened,please check!" %weblink_str,add_log_files='I')
+        return None
+    else:
+        assert False, "%s can't be opened,please check!" %weblink_str
 
 def dfm_col_type_conversion(dfm:DataFrame,index='',columns= {}, dateformat='%Y-%m-%d'):
     """

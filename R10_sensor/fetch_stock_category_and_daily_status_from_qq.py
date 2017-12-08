@@ -33,7 +33,7 @@ def fetch2DB():
     for i in range(4):
         url_link = url_catglist %{'catg_type':'0'+str(i+1)}
         # print(url_link)
-        soup_category = gcf.get_webpage(url_link)
+        soup_category = gcf.get_webpage_with_retry(url_link)
         list_data = re.findall("data:'(.*)'",str(soup_category))
         # TODO: error handling
         assert len(list_data) == 1 , 'No category details can be found under category type %s' %(i+1)
@@ -164,7 +164,7 @@ def parse_stock_under_catg(dfm_catgs:DataFrame) ->dict:
     for index,row in dfm_catgs.iterrows():
         catg_code = row['Catg_Reference']
         url_catgstklist = R50_general.general_constants.weblinks['stock_category_w_detail_qq'][2] % {'catg_code':catg_code}
-        soup_stklst = gcf.get_webpage(url_catgstklist)
+        soup_stklst = gcf.get_webpage_with_retry(url_catgstklist)
         list_data = re.findall("data:'(.*)'", str(soup_stklst))
 
         if list_data:
@@ -191,7 +191,7 @@ def parse_concept(ls_catgs:list):
     str_catgs =','.join(ls_catgs)
     url_catgdetail = R50_general.general_constants.weblinks['stock_category_w_detail_qq'][1] % {'catg_list': str_catgs}
     #print(url_catgdetail)
-    soup_catg = gcf.get_webpage(url_catgdetail)
+    soup_catg = gcf.get_webpage_with_retry(url_catgdetail)
     # print(soup_catg)
 
     dt_type = {'01':'腾讯行业',
