@@ -40,6 +40,13 @@ def fetch2FILE():
                                                  process_mode='w_update')
 
                 logprint('News %s is downloaded' %(row['News_ID']+' ' + row['Title']))
+            else:
+                dfm_newslist_upt = DataFrame([{'Region_ID':row['Region_ID'],'News_ID':row['News_ID'],
+                                              'News_downloaded':'E'}])
+                df2db.dfm_to_db_insert_or_update(dfm_newslist_upt, ['Region_ID', 'News_ID'], table_name, global_module_name,
+                                                 process_mode='w_update')
+
+                logprint('News %s can not downloaded!' %(row['News_ID']+' ' + row['Title']),add_log_files='I')
 
 
 if __name__ == "__main__":
