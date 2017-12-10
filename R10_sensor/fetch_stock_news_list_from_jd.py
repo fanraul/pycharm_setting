@@ -39,7 +39,7 @@ def fetch2DB():
         for i in range(webscrap_times):
             start_page_cur = i * general_pages_to_split + general_start_page
             if i == webscrap_times -1:
-                pages_to_fetch_cur = general_pages_to_fetch % general_pages_to_split
+                pages_to_fetch_cur = general_pages_to_fetch % general_pages_to_split +1
             else:
                 pages_to_fetch_cur = general_pages_to_split
 
