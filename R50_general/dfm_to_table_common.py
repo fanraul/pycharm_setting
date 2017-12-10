@@ -65,6 +65,39 @@ def get_all_stocklist(stock :str ="") -> DataFrame:
     return dfm_stocks
 
 
+def get_data_from_DB(table_name, dfm_conditions=DataFrame(), free_conditions :str ="") -> DataFrame:
+    """
+    dfm_conditions: dfm structure,  db_col-> col name, db_oper-> operater (=,>,<,like etc.), db_val->condition value,
+    free_conditions: any condition sentence
+    return: dataframe of results
+    """
+    ls_dfm_cond = []
+    str_dfm_cond = ''
+    if len(dfm_conditions) > 0:
+        for index,row in dfm_conditions.iterrows():
+            ls_dfm_cond.append(row['db_col'] + ' ' + row['db_oper'] + ' '+ row['db_val'])
+        str_dfm_cond = ' AND '.join(ls_dfm_cond)
+
+    if str_dfm_cond:
+        if free_conditions:
+            dfm_data = pd.read_sql_query('select * from %s where %s' %(table_name,str_dfm_cond + ' AND '+free_conditions)
+                                   , conn)
+            return dfm_data
+        else:
+            dfm_data = pd.read_sql_query('select * from %s where %s' %(table_name,str_dfm_cond)
+                                   , conn)
+            return dfm_data
+    else:
+        if free_conditions:
+            dfm_data = pd.read_sql_query('select * from %s where %s' %(table_name,free_conditions)
+                                   , conn)
+            return dfm_data
+        else:
+            dfm_data = pd.read_sql_query('select * from %s' %table_name
+                                   , conn)
+            return dfm_data
+
+
 def get_chars(origin = '',usages = [],freq=['D'],charids=[]) ->DataFrame:
     """
     获得股票的属性chars清单
