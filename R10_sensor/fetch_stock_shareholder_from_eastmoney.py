@@ -404,7 +404,22 @@ def json_parse_stock_sh60(json_stock_sh:str):
 			"gplx": "定向增发机构配售股份"        '股票类型': 'nvarchar(50)',
             """
 
-        return DataFrame(ls_sh10,index = ls_sh10_index)
+        # if same transaction datetime has multiple lines, need to combine them into one line.
+        ls_sh10_index_new = []
+        ls_sh10_new =[]
+        for i in range(len(ls_sh10)):
+            if ls_sh10_index[i] not in ls_sh10_index_new:
+                ls_sh10_new.append(ls_sh10[i])
+                ls_sh10_index_new.append(ls_sh10_index[i])
+            else:
+                # find the index of the duplicated entry
+                j = ls_sh10_index_new.index(ls_sh10_index[i])
+                ls_sh10_new[j]['解禁股数'] += ls_sh10[i]['解禁股数']
+                ls_sh10_new[j]['解禁股占总股本比例'] += ls_sh10[i]['解禁股占总股本比例']
+                ls_sh10_new[j]['解禁股占流通股本比例'] += ls_sh10[i]['解禁股占流通股本比例']
+                ls_sh10_new[j]['股票类型'] += '|'+ls_sh10[i]['股票类型']
+
+        return DataFrame(ls_sh10_new,index = ls_sh10_index_new)
     else:
         return DataFrame()
 

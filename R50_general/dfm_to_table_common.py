@@ -294,6 +294,7 @@ def load_dfm_to_db_single_value_by_key_cols_w_hist(dt_key_cols:dict,dfm_data:Dat
                     tmp_colname = col.replace('[', '').replace(']', '')
                     if tmp_colname in dfm_db_data.columns:
                         # 如果两种是空值,只是None的类型不同,不处理.
+                        # print('hello',dfm_data.loc[ts_id][col],',', dfm_db_data.loc[ts_id][tmp_colname])
                         if pd.isnull(dfm_data.loc[ts_id][col]) and pd.isnull(dfm_db_data.loc[ts_id][tmp_colname]):
                             continue
                         if dfm_data.loc[ts_id][col] != dfm_db_data.loc[ts_id][tmp_colname]:

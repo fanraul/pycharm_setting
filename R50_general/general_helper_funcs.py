@@ -5,6 +5,7 @@ import os.path
 import smtplib
 import time
 import urllib.error
+import json.decoder
 import urllib.request
 import http.client
 from datetime import datetime
@@ -112,6 +113,10 @@ def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False,decode='
         # TODO urgent
         logprint('Exception http.client.RemoteDisconnected raised, Remote end closed connection without response')
         raise e
+    except ConnectionResetError as e:
+        logprint('Exception ConnectionResetError raised, Remote end closed connection without response')
+        raise e
+
     except Exception as e:
         logprint("Weblink %s open failed error unkown:" % weblink_str, e,type(e))
         raise e
@@ -121,7 +126,7 @@ def get_webpage_with_retry(weblink_str :str, try_num = 5, ignore_error = True, t
     for i in range(try_num):
         try:
             return get_webpage(weblink_str,time_wait,flg_return_json,decode,flg_return_rawhtml)
-        except (urllib.error.HTTPError,urllib.error.URLError,http.client.RemoteDisconnected):
+        except (urllib.error.HTTPError,urllib.error.URLError,http.client.RemoteDisconnected,ConnectionResetError):
             logprint('Web scrapping exception raised, auto reprocess after %s seconds. Current time is %s' % (time_wait,datetime.now()))
         except json.decoder.JSONDecodeError:
             logprint('JSONDecode exception raised, auto reprocess after %s seconds. Current time is %s' % (time_wait,datetime.now()))
