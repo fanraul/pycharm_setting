@@ -15,7 +15,7 @@ import R50_general.dfm_to_table_common as df2db
 
 
 global_module_name = 'fetch_stock_news_details_from_jd'
-
+flg_error_reprocess = ''
 
 def fetch2FILE():
     table_name = R50_general.general_constants.dbtables['newslist_jd']
@@ -23,9 +23,16 @@ def fetch2FILE():
                           {'db_col':'Ind_useless', 'db_oper': 'is', 'db_val': "NULL"},])
 
     dfm_newslist = df2db.get_data_from_DB(table_name,dfm_cond)
+
+    if flg_error_reprocess == 'X':
+        dfm_cond_error = DataFrame([{'db_col':'News_downloaded','db_oper':'=','db_val':"'E'"},
+                          {'db_col':'Ind_useless', 'db_oper': 'is', 'db_val': "NULL"},])
+        dfm_newslist_error = df2db.get_data_from_DB(table_name, dfm_cond_error)
+        dfm_newslist = pd.concat([dfm_newslist,dfm_newslist_error])
+
     for index,row in dfm_newslist.iterrows():
         url_news = row['Weblink']
-        html_news_item = gcf.get_webpage_with_retry(url_news,flg_return_rawhtml=True,time_wait=1)
+        html_news_item = gcf.get_webpage_with_retry(url_news,flg_return_rawhtml=True,time_wait=5)
         if html_news_item:
             soup_news_item=BeautifulSoup(html_news_item,"lxml")
             if len(soup_news_item.find_all('article')) > 0:
@@ -50,4 +57,5 @@ def fetch2FILE():
 
 
 if __name__ == "__main__":
+    flg_error_reprocess = 'X'
     fetch2FILE()
