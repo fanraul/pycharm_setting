@@ -57,5 +57,12 @@ def fetch2FILE():
 
 
 if __name__ == "__main__":
-    flg_error_reprocess = 'X'
-    fetch2FILE()
+    # flg_error_reprocess = 'X'
+    # fetch2FILE()
+    table_name = R50_general.general_constants.dbtables['newslist_jd']
+
+    dfm_newslist = df2db.get_data_from_DB(table_name,DataFrame())
+
+    dfm_newslist['duplicated'] = dfm_newslist.duplicated(subset=['News_datetime','Title'])
+
+    dfm_newslist.to_excel('newslistDB.xls')

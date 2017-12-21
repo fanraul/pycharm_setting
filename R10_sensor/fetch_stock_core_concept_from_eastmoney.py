@@ -83,15 +83,15 @@ def soup_parse_stock_cpt(json_stock_cpt:str):
     ls_cpts = []
     if dt_json_stkcpt:
         ls_hxtc = dt_json_stkcpt['hxtc']
-        for item in ls_hxtc:
-            dt_cpt = {}
-            dt_cpt['关键词'] = item['gjc'].strip()
-            dt_cpt['要点内容'] = item['ydnr'].strip()
-            ls_cpts.append(dt_cpt)
+        if ls_hxtc:
+            for item in ls_hxtc:
+                dt_cpt = {}
+                dt_cpt['关键词'] = item['gjc'].strip()
+                dt_cpt['要点内容'] = item['ydnr'].strip()
+                ls_cpts.append(dt_cpt)
             # print(len(dt_cpt['关键词']),',',len(dt_cpt['要点内容']))
-        return DataFrame(ls_cpts)
-    else:
-        return DataFrame()
+            return DataFrame(ls_cpts)
+    return DataFrame()
 
 def auto_reprocess():
     ahf.auto_reprocess_dueto_ipblock(identifier=global_module_name, func_to_call=fetch2DB, wait_seconds=60)
