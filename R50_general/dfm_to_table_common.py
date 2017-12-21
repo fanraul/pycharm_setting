@@ -65,7 +65,7 @@ def get_all_stocklist(stock :str ="") -> DataFrame:
     return dfm_stocks
 
 
-def get_data_from_DB(table_name, dfm_conditions=DataFrame(), free_conditions :str ="") -> DataFrame:
+def get_data_from_DB(table_name, dfm_conditions=DataFrame(), oper_dfm = 'AND', free_conditions :str ="") -> DataFrame:
     """
     dfm_conditions: dfm structure,  db_col-> col name, db_oper-> operater (=,>,<,like etc.), db_val->condition value,
     free_conditions: any condition sentence
@@ -76,7 +76,8 @@ def get_data_from_DB(table_name, dfm_conditions=DataFrame(), free_conditions :st
     if len(dfm_conditions) > 0:
         for index,row in dfm_conditions.iterrows():
             ls_dfm_cond.append(row['db_col'] + ' ' + row['db_oper'] + ' '+ row['db_val'])
-        str_dfm_cond = ' AND '.join(ls_dfm_cond)
+        str_oper = ' ' + oper_dfm + ' '
+        str_dfm_cond = str_oper.join(ls_dfm_cond)
 
     if str_dfm_cond:
         if free_conditions:

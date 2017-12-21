@@ -18,7 +18,6 @@ global_module_name = 'fetch_stock_news_cn_from_jd'
 general_pages_to_fetch = 200
 general_start_page = 0
 general_pages_to_split = 5
-flg_error_reprocess = ''
 
 '''
 Program purpose: get news list and download html
@@ -37,6 +36,10 @@ def fetch2DB():
     table_name = R50_general.general_constants.dbtables['newslist_jd']
     df2db.create_table_by_template(table_name,table_type='jd_newslist')
 
+    # get processed new list from DB, downloaded or useless, no need to download html or update db for these entries
+    key_cols = ['Region_ID','News_datetime','Title']
+    dfm_newslist_processed = get_newlist_processed()[key_cols]
+
     # update every general_pages_to_split pages
     ls_dfmnews = []
     webscrap_times = general_pages_to_fetch // general_pages_to_split + 1
@@ -53,8 +56,11 @@ def fetch2DB():
 
             if len(dfm_newslist) > 0:
                 dfm_newslist['Region_ID'] = 'CN'
-                df2db.dfm_to_db_insert_or_update(dfm_newslist, ['Region_ID','News_ID'], table_name, global_module_name, process_mode='wo_update')
-                ls_dfmnews.append(dfm_newslist)
+                dfm_newslist_toprocess = gcf.dfm_A_minus_B(dfm_newslist,dfm_newslist_processed,key_cols)
+                dfm_newslist_toprocess['News_downloaded'] = dfm_newslist_toprocess.apply(fetch2FILE,axis=1)
+                df2db.dfm_to_db_insert_or_update(dfm_newslist_toprocess, ['Region_ID','News_ID'], table_name, global_module_name, process_mode='w_update')
+                ls_dfmnews.append(dfm_newslist_toprocess)
+                dfm_newslist_processed = dfm_newslist_processed.append(dfm_newslist_toprocess[key_cols],ignore_index=True)
     # except IntegrityError:
     finally:
         pd.concat(ls_dfmnews).to_excel('newslist.xls')
@@ -95,44 +101,38 @@ def parse_newslist(pages,start_page)-> DataFrame  :
     </li>
 '''
 
-
-def fetch2FILE():
+def get_newlist_processed():
     table_name = R50_general.general_constants.dbtables['newslist_jd']
-    dfm_cond = DataFrame([{'db_col':'News_downloaded','db_oper':'is','db_val':"NULL"},
-                          {'db_col':'Ind_useless', 'db_oper': 'is', 'db_val': "NULL"},])
+    dfm_cond = DataFrame([{'db_col': 'News_downloaded', 'db_oper': '=', 'db_val': "'X'"},
+                          {'db_col': 'Ind_useless', 'db_oper': '=', 'db_val': "'X'"}, ])
 
-    dfm_newslist = df2db.get_data_from_DB(table_name,dfm_cond)
+    return df2db.get_data_from_DB(table_name, dfm_cond,'OR')
 
-    if flg_error_reprocess == 'X':
-        dfm_cond_error = DataFrame([{'db_col':'News_downloaded','db_oper':'=','db_val':"'E'"},
-                          {'db_col':'Ind_useless', 'db_oper': 'is', 'db_val': "NULL"},])
-        dfm_newslist_error = df2db.get_data_from_DB(table_name, dfm_cond_error)
-        dfm_newslist = pd.concat([dfm_newslist,dfm_newslist_error])
 
-    for index,row in dfm_newslist.iterrows():
-        url_news = row['Weblink']
-        html_news_item = gcf.get_webpage_with_retry(url_news,flg_return_rawhtml=True,time_wait=5)
-        if html_news_item:
-            soup_news_item=BeautifulSoup(html_news_item,"lxml")
-            if len(soup_news_item.find_all('article')) > 0:
-                # there is article session in the html
-                filename_news = R50_general.general_constants.Global_path_news_details_jd + row['News_ID']+'.html'
-                file_news = open(filename_news,'wb')
-                file_news.write(html_news_item)
-                file_news.close()
-                dfm_newslist_upt = DataFrame([{'Region_ID':row['Region_ID'],'News_ID':row['News_ID'],
-                                              'News_downloaded':'X'}])
-                df2db.dfm_to_db_insert_or_update(dfm_newslist_upt, ['Region_ID', 'News_ID'], table_name, global_module_name,
-                                                 process_mode='w_update')
+def fetch2FILE(row:Series):
+    # TODO: timestamp as file id , check topics in the html, if topics same as title, return X, else return E
+    '''
+    :param row:
+    :return:
+    '''
+    url_news = row['Weblink']
+    html_news_item = gcf.get_webpage_with_retry(url_news,flg_return_rawhtml=True,time_wait=5)
+    if html_news_item:
+        soup_news_item=BeautifulSoup(html_news_item,"lxml")
+        if len(soup_news_item.find_all('article')) > 0:
+            # there is article session in the html
+            filename_news = R50_general.general_constants.Global_path_news_details_jd + row['News_ID']+'.html'
+            file_news = open(filename_news,'wb')
+            file_news.write(html_news_item)
+            file_news.close()
+            dfm_newslist_upt = DataFrame([{'Region_ID':row['Region_ID'],'News_ID':row['News_ID'],
+                                          'News_downloaded':'X'}])
 
-                logprint('News %s is downloaded' %(row['News_ID']))
-            else:
-                dfm_newslist_upt = DataFrame([{'Region_ID':row['Region_ID'],'News_ID':row['News_ID'],
-                                              'News_downloaded':'E'}])
-                df2db.dfm_to_db_insert_or_update(dfm_newslist_upt, ['Region_ID', 'News_ID'], table_name, global_module_name,
-                                                 process_mode='w_update')
-
-                logprint('News %s can not downloaded!' %(row['News_ID']),add_log_files='I')
+            logprint('News %s is downloaded' %(row['News_ID']))
+        else:
+            dfm_newslist_upt = DataFrame([{'Region_ID':row['Region_ID'],'News_ID':row['News_ID'],
+                                          'News_downloaded':'E'}])
+            logprint('News %s can not downloaded!' %(row['News_ID']),add_log_files='I')
 
 if __name__ == '__main__':
     fetch2DB()
