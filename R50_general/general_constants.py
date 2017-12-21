@@ -116,10 +116,10 @@ CREATE TABLE [%(table)s](
 dbtemplate_jd_newslist = """
 CREATE TABLE [%(table)s](
 	[Region_ID] [nvarchar](50) NOT NULL,
-	[News_ID] [nvarchar] (20) NOT NULL,
-    [Title] [nvarchar] (400) NULL,
+	[News_datetime] [datetime] NOT NULL,
+	[Title] [nvarchar] (200) NOT NULL,
+	[News_FileID] [nvarchar] (30) NULL,
     [Weblink] [nvarchar] (100) NULL,
-    [News_datetime] [datetime] NULL,
 	[Created_datetime] [datetime] NULL,
 	[Created_by] [nvarchar](50) NULL,
 	[Last_modified_datetime] [datetime] NULL,
@@ -130,7 +130,8 @@ CREATE TABLE [%(table)s](
  CONSTRAINT [PK_%(table)s] PRIMARY KEY 
 (
 	[Region_ID] ASC,
-	[News_id] ASC
+	[News_datetime] ASC,
+	[Title] ASC,
 ))
 """
 

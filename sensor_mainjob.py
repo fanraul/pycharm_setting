@@ -18,7 +18,7 @@ from R10_sensor import (fetch_stock_fin_reports_from_tquant,
                         fetch_stock_dividend_from_cninfo,
                         fetch_stock_dailybar_from_netease,
                         fetch_stock_current_dailybar_from_sina,
-                        fetch_stock_news_list_from_jd,
+                        fetch_stock_news_cn_from_jd,
                         )
 
 import R50_general.general_helper_funcs as gcf
