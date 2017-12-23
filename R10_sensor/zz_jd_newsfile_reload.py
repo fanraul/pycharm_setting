@@ -32,8 +32,12 @@ for filename in os.listdir(folder_name):
         print(title)
         dt_news ={}
         dt_news['title'] = title
-        dt_news['filename'] = filename[:-5]
+        dt_news['filename'] = filename
+        news_datetimes = soup.find_all(class_ = 'typical details-typical font-gray')
+        if len(news_datetimes) > 0:
+            dt_news['news_datetime'] = '|'.join(news_datetimes[0].text.split(' ')[1:])[:19]
         ls_dfm_newslist.append(dt_news)
+
 
 dfm_newslist = DataFrame(ls_dfm_newslist)
 dfm_newslist.to_excel('newsfile.xls')

@@ -125,13 +125,14 @@ CREATE TABLE [%(table)s](
 	[Last_modified_datetime] [datetime] NULL,
 	[Last_modified_by] [nvarchar](50) NULL,
 	[News_downloaded] [char](1) NULL,
+	[Page_num_last_fetch] [int] NULL,
 	[News_parsed] [char](1) NULL,
 	[Ind_useless] [char](1) NULL,
  CONSTRAINT [PK_%(table)s] PRIMARY KEY 
 (
 	[Region_ID] ASC,
 	[News_datetime] ASC,
-	[Title] ASC,
+	[Title] ASC
 ))
 """
 

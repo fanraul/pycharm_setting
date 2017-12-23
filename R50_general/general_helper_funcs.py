@@ -258,7 +258,8 @@ def dfm_A_intersect_B(A:DataFrame,B:DataFrame, key_cols:list)->DataFrame:
     B_tmp=B[key_cols].copy()
     B_tmp['tmp_col_duplicated'] = 'Y'
     dfm_merge_by_keycols = A.merge(B_tmp, how='left', on = key_cols)
-    dfm_merge_by_keycols.dropna(inplace = True)
+    # dfm_merge_by_keycols.dropna() 这里不能使用dropna,dropna只要这行中有None值,就会删除.会导致误删除.
+    dfm_merge_by_keycols = dfm_merge_by_keycols[dfm_merge_by_keycols.tmp_col_duplicated == 'Y']
     del dfm_merge_by_keycols['tmp_col_duplicated']
     return dfm_merge_by_keycols
 

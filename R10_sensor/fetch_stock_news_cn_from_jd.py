@@ -15,9 +15,9 @@ import R50_general.dfm_to_table_common as df2db
 from sqlalchemy.exc import IntegrityError
 
 global_module_name = 'fetch_stock_news_cn_from_jd'
-general_pages_to_fetch = 200
+general_pages_to_fetch = 1
 general_start_page = 0
-general_pages_to_split = 5
+general_pages_to_split = 1
 
 '''
 Program purpose: get news list and download html
@@ -52,13 +52,14 @@ def fetch2DB():
                 pages_to_fetch_cur = general_pages_to_split
 
             dfm_newslist = parse_newslist(pages_to_fetch_cur,start_page_cur)
-            dfm_newslist.drop_duplicates(subset = ['News_ID'],inplace=True)
-
-            if len(dfm_newslist) > 0:
-                dfm_newslist['Region_ID'] = 'CN'
-                dfm_newslist_toprocess = gcf.dfm_A_minus_B(dfm_newslist,dfm_newslist_processed,key_cols)
-                dfm_newslist_toprocess['News_downloaded'] = dfm_newslist_toprocess.apply(fetch2FILE,axis=1)
-                df2db.dfm_to_db_insert_or_update(dfm_newslist_toprocess, ['Region_ID','News_ID'], table_name, global_module_name, process_mode='w_update')
+            dfm_newslist.drop_duplicates(subset = ['News_datetime','Title'],inplace=True)
+            dfm_newslist['Region_ID'] = 'CN'
+            dfm_newslist_toprocess = gcf.dfm_A_minus_B(dfm_newslist, dfm_newslist_processed, key_cols)
+            if len(dfm_newslist_toprocess) > 0:
+                dfm_newslist_toprocess['News_FileID'] = dfm_newslist_toprocess.apply(fetch2FILE,axis=1)
+                dfm_newslist_toprocess['News_downloaded'] = dfm_newslist_toprocess.apply(lambda s: 'X' if not pd.isnull(s['News_FileID']) else 'E',                                                                                         axis =1)
+                gcf.dfmprint(dfm_newslist_toprocess)
+                df2db.dfm_to_db_insert_or_update(dfm_newslist_toprocess, key_cols, table_name, global_module_name, process_mode='w_update')
                 ls_dfmnews.append(dfm_newslist_toprocess)
                 dfm_newslist_processed = dfm_newslist_processed.append(dfm_newslist_toprocess[key_cols],ignore_index=True)
     # except IntegrityError:
@@ -80,7 +81,8 @@ def parse_newslist(pages,start_page)-> DataFrame  :
                 dt_newslink['Title'] = newslink.div.a.string.strip()
                 dt_newslink['Weblink'] = url_prefix_newsdetail + str_news_link
                 dt_newslink['News_datetime'] = datetime.strptime('20'+ newslink.find_all('span',"date-time")[0].string.strip(),'%Y-%m-%d %H:%M')
-                dt_newslink['News_ID'] = re.findall('detail-([0-9]+).html',str_news_link)[0]
+                dt_newslink['Page_num_last_fetch'] = i+start_page
+                # dt_newslink['News_ID'] = re.findall('detail-([0-9]+).html',str_news_link)[0]
                 ls_dfmnewslist.append(dt_newslink)
     return DataFrame(ls_dfmnewslist)
 
@@ -110,7 +112,7 @@ def get_newlist_processed():
 
 
 def fetch2FILE(row:Series):
-    # TODO: timestamp as file id , check topics in the html, if topics same as title, return X, else return E
+    # timestamp as file id , check topics in the html, if topics same as title, return X, else return E
     '''
     :param row:
     :return:
@@ -119,20 +121,34 @@ def fetch2FILE(row:Series):
     html_news_item = gcf.get_webpage_with_retry(url_news,flg_return_rawhtml=True,time_wait=5)
     if html_news_item:
         soup_news_item=BeautifulSoup(html_news_item,"lxml")
+        titles = soup_news_item.find_all('title')
+        if not titles:
+            logprint('News %s weblink %s content incorrect, can not find title in html' %(row['Title'],row['Weblink']))
+            return
+        for tag in titles:
+            title = tag.text.strip()[:-10].strip()
+            # check html title is the same as weblink title, if not the same, return 'E'
+            if title != row['Title']:
+                logprint(
+                    'News %s weblink %s html content inconsistent, title in html is %s' %(row['Title'],  row['Weblink'],
+                                                                                          title),add_log_files='I')
+                return
         if len(soup_news_item.find_all('article')) > 0:
             # there is article session in the html
-            filename_news = R50_general.general_constants.Global_path_news_details_jd + row['News_ID']+'.html'
+            timestamp = datetime.now()
+            news_fileid = str(timestamp)[2:].replace('-','').replace(':','').replace(' ','') + '.html'
+            filename_news = R50_general.general_constants.Global_path_news_details_jd + news_fileid
             file_news = open(filename_news,'wb')
             file_news.write(html_news_item)
             file_news.close()
-            dfm_newslist_upt = DataFrame([{'Region_ID':row['Region_ID'],'News_ID':row['News_ID'],
-                                          'News_downloaded':'X'}])
-
-            logprint('News %s is downloaded' %(row['News_ID']))
+            logprint('News %s is downloaded' %(row['Title']))
+            return news_fileid
         else:
-            dfm_newslist_upt = DataFrame([{'Region_ID':row['Region_ID'],'News_ID':row['News_ID'],
-                                          'News_downloaded':'E'}])
-            logprint('News %s can not downloaded!' %(row['News_ID']),add_log_files='I')
+            logprint('News %s weblink %s does not have article session, no content!' %(row['Title'],row['Weblink']))
+            return
+    logprint('News %s weblink %s html can not access' %(row['Title'],row['Weblink']))
+    return
+
 
 if __name__ == '__main__':
     fetch2DB()
