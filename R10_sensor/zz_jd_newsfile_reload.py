@@ -39,5 +39,7 @@ for filename in os.listdir(folder_name):
         ls_dfm_newslist.append(dt_news)
 
 
+
+
 dfm_newslist = DataFrame(ls_dfm_newslist)
 dfm_newslist.to_excel('newsfile.xls')

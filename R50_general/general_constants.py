@@ -120,6 +120,7 @@ CREATE TABLE [%(table)s](
 	[Title] [nvarchar] (200) NOT NULL,
 	[News_FileID] [nvarchar] (30) NULL,
     [Weblink] [nvarchar] (100) NULL,
+    [News_actual_datetime] [datetime] NOT NULL,
 	[Created_datetime] [datetime] NULL,
 	[Created_by] [nvarchar](50) NULL,
 	[Last_modified_datetime] [datetime] NULL,

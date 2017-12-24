@@ -15,12 +15,16 @@ import R50_general.dfm_to_table_common as df2db
 from sqlalchemy.exc import IntegrityError
 
 global_module_name = 'fetch_stock_news_cn_from_jd'
-general_pages_to_fetch = 1
+general_pages_to_fetch = 100
 general_start_page = 0
-general_pages_to_split = 1
+general_pages_to_split = 5
 
 '''
 Program purpose: get news list and download html
+京东的网页id不是唯一标识, 同样的id可能对应不同的文章
+故使用文章的时间和文章的title作为唯一的key值,但是京东的文章时间有时也会变,所以时间取到小时,即title和精确到小时的时间确定是否为
+唯一的文章.
+计划每天抓取,检查最近的100页
 '''
 
 def fetch2DB():
@@ -58,7 +62,7 @@ def fetch2DB():
             if len(dfm_newslist_toprocess) > 0:
                 dfm_newslist_toprocess['News_FileID'] = dfm_newslist_toprocess.apply(fetch2FILE,axis=1)
                 dfm_newslist_toprocess['News_downloaded'] = dfm_newslist_toprocess.apply(lambda s: 'X' if not pd.isnull(s['News_FileID']) else 'E',                                                                                         axis =1)
-                gcf.dfmprint(dfm_newslist_toprocess)
+                # gcf.dfmprint(dfm_newslist_toprocess)
                 df2db.dfm_to_db_insert_or_update(dfm_newslist_toprocess, key_cols, table_name, global_module_name, process_mode='w_update')
                 ls_dfmnews.append(dfm_newslist_toprocess)
                 dfm_newslist_processed = dfm_newslist_processed.append(dfm_newslist_toprocess[key_cols],ignore_index=True)
@@ -80,7 +84,9 @@ def parse_newslist(pages,start_page)-> DataFrame  :
                 dt_newslink ={}
                 dt_newslink['Title'] = newslink.div.a.string.strip()
                 dt_newslink['Weblink'] = url_prefix_newsdetail + str_news_link
-                dt_newslink['News_datetime'] = datetime.strptime('20'+ newslink.find_all('span',"date-time")[0].string.strip(),'%Y-%m-%d %H:%M')
+                news_datetime = '20' + newslink.find_all('span', "date-time")[0].string.strip()
+                dt_newslink['News_actual_datetime'] = datetime.strptime(news_datetime , '%Y-%m-%d %H:%M')
+                dt_newslink['News_datetime'] = datetime.strptime(news_datetime[:-3],'%Y-%m-%d %H')
                 dt_newslink['Page_num_last_fetch'] = i+start_page
                 # dt_newslink['News_ID'] = re.findall('detail-([0-9]+).html',str_news_link)[0]
                 ls_dfmnewslist.append(dt_newslink)
