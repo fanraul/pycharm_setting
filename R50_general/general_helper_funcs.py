@@ -50,7 +50,7 @@ def logprint(*args, sep=' ',  end='\n', file=None, add_log_files = '' ):
 
         print(*args, sep=' ', end='\n', file= open(log_file,mode='a',encoding='UTF-8'))
         if 'I' in add_log_files:
-            print(*args, sep=' ', end='\n', file=open(log_file_inconsistency, 'a'))
+            print(*args, sep=' ', end='\n', file=open(log_file_inconsistency,mode='a',encoding='UTF-8'))
 
 
 def setup_log_file(jobname:str):
