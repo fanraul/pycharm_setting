@@ -42,6 +42,8 @@ def logprint(*args, sep=' ',  end='\n', file=None, add_log_files = '' ):
     :return:
     """
     global log_file,log_file_inconsistency
+    # remove special unicode \u200b
+    # args = [x.replace(u'\u200b','') for x in args]
     if log:
         print(*args,sep=' ', end='\n', file=None)
         if log_file == '':

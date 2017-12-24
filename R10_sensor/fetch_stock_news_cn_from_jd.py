@@ -4,6 +4,8 @@ import numpy as np
 
 from bs4 import BeautifulSoup
 import re
+import sys
+import io
 
 from datetime import datetime
 
@@ -15,8 +17,8 @@ import R50_general.dfm_to_table_common as df2db
 from sqlalchemy.exc import IntegrityError
 
 global_module_name = 'fetch_stock_news_cn_from_jd'
-general_pages_to_fetch = 100
-general_start_page = 0
+general_pages_to_fetch = 5800
+general_start_page = 255
 general_pages_to_split = 5
 
 '''
@@ -82,7 +84,8 @@ def parse_newslist(pages,start_page)-> DataFrame  :
             for newslink in body_newslist:
                 str_news_link = newslink.div.a.get('href').strip()
                 dt_newslink ={}
-                dt_newslink['Title'] = newslink.div.a.string.strip()
+                # some title has a special unicode '\u200b
+                dt_newslink['Title'] = newslink.div.a.string.strip().replace(u'\u200b','')
                 dt_newslink['Weblink'] = url_prefix_newsdetail + str_news_link
                 news_datetime = '20' + newslink.find_all('span', "date-time")[0].string.strip()
                 dt_newslink['News_actual_datetime'] = datetime.strptime(news_datetime , '%Y-%m-%d %H:%M')
@@ -125,6 +128,7 @@ def fetch2FILE(row:Series):
     '''
     url_news = row['Weblink']
     html_news_item = gcf.get_webpage_with_retry(url_news,flg_return_rawhtml=True,time_wait=5)
+    print(row['Title'])
     if html_news_item:
         soup_news_item=BeautifulSoup(html_news_item,"lxml")
         titles = soup_news_item.find_all('title')
@@ -132,7 +136,8 @@ def fetch2FILE(row:Series):
             logprint('News %s weblink %s content incorrect, can not find title in html' %(row['Title'],row['Weblink']))
             return
         for tag in titles:
-            title = tag.text.strip()[:-10].strip()
+            # some title has a special unicode '\u200b
+            title = tag.text.strip()[:-10].strip().replace(u'\u200b','')
             # check html title is the same as weblink title, if not the same, return 'E'
             if title != row['Title']:
                 logprint(
@@ -147,7 +152,7 @@ def fetch2FILE(row:Series):
             file_news = open(filename_news,'wb')
             file_news.write(html_news_item)
             file_news.close()
-            logprint('News %s is downloaded' %(row['Title']))
+            logprint('News %s is downloaded' % row['Title'])
             return news_fileid
         else:
             logprint('News %s weblink %s does not have article session, no content!' %(row['Title'],row['Weblink']))
