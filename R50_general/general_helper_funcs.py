@@ -48,7 +48,7 @@ def logprint(*args, sep=' ',  end='\n', file=None, add_log_files = '' ):
             log_file = log_folder +'tmp/templog'+log_timestamp+'.txt'
             log_file_inconsistency = log_folder +'tmp/templog' + '_inconsistency_' +log_timestamp+'.txt'
 
-        print(*args, sep=' ', end='\n', file= open(log_file,'a'))
+        print(*args, sep=' ', end='\n', file= open(log_file,mode='a',encoding='UTF-8'))
         if 'I' in add_log_files:
             print(*args, sep=' ', end='\n', file=open(log_file_inconsistency, 'a'))
 
