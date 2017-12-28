@@ -188,7 +188,7 @@ scheduleman = {
         'rule': 'W',
         'weekdays': [0, 2, 4, ]  # Monday,wednesday,Friday
     },
-    'fetch_stock_news_list_from_jd':{
+    'fetch_stock_news_cn_from_jd':{
         'rule': 'W',
         'weekdays':[0,1,2,3,4,5,6]  #everyday
     },
