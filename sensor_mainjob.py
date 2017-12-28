@@ -81,9 +81,9 @@ if __name__ == '__main__':
         append_processed_prog_log(program_name='fetch_stock_dailybar_from_netease')
 
         # step 25: get news list from jd
-        # ahf.func_call_as_job_with_trace(fetch_stock_news_list_from_jd.fetch2DB,
-        #                          program_name='fetch_stock_news_list_from_jd',processed_set=processed_set)
-        # append_processed_prog_log(program_name='fetch_stock_news_list_from_jd')
+        ahf.func_call_as_job_with_trace(fetch_stock_news_cn_from_jd.fetch2DB,
+                                 program_name='fetch_stock_news_cn_from_jd',processed_set=processed_set)
+        append_processed_prog_log(program_name='fetch_stock_news_cn_from_jd')
 
         # step 30: update eastmoney core concept
         ahf.func_call_as_job_with_trace(fetch_stock_core_concept_from_eastmoney.auto_reprocess,
