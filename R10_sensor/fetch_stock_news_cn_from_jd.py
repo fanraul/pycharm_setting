@@ -14,12 +14,12 @@ import R50_general.general_constants
 import R50_general.general_helper_funcs as gcf
 from R50_general.general_helper_funcs import logprint
 import R50_general.dfm_to_table_common as df2db
+# from pyodbc import IntegrityError
 from sqlalchemy.exc import IntegrityError
-
 global_module_name = 'fetch_stock_news_cn_from_jd'
-general_pages_to_fetch = 5800
-general_start_page = 255
-general_pages_to_split = 5
+general_pages_to_fetch = 200
+general_start_page = 0
+general_pages_to_split = 1
 
 '''
 Program purpose: get news list and download html
@@ -65,12 +65,20 @@ def fetch2DB():
                 dfm_newslist_toprocess['News_FileID'] = dfm_newslist_toprocess.apply(fetch2FILE,axis=1)
                 dfm_newslist_toprocess['News_downloaded'] = dfm_newslist_toprocess.apply(lambda s: 'X' if not pd.isnull(s['News_FileID']) else 'E',                                                                                         axis =1)
                 # gcf.dfmprint(dfm_newslist_toprocess)
-                df2db.dfm_to_db_insert_or_update(dfm_newslist_toprocess, key_cols, table_name, global_module_name, process_mode='w_update')
+                try:
+                    df2db.dfm_to_db_insert_or_update(dfm_newslist_toprocess, key_cols, table_name, global_module_name, process_mode='w_update')
+                except IntegrityError as e:
+                    # 如果错误是主键重复,则忽略(应该是全角和半角的问题)
+                    if e.orig.args[0] == '23000':
+                        logprint('DB primary key duplicated',e.orig,e.params,add_log_files='I')
+                    else:
+                        raise e
                 ls_dfmnews.append(dfm_newslist_toprocess)
                 dfm_newslist_processed = dfm_newslist_processed.append(dfm_newslist_toprocess[key_cols],ignore_index=True)
     # except IntegrityError:
     finally:
-        pd.concat(ls_dfmnews).to_excel('newslist.xls')
+        if len(ls_dfmnews) >0 :
+            pd.concat(ls_dfmnews).to_excel('newslist.xls')
 
 def parse_newslist(pages,start_page)-> DataFrame  :
     logprint('Get JD stock news from pages %s to pages %s:' %(start_page,start_page+pages-1))
@@ -128,7 +136,7 @@ def fetch2FILE(row:Series):
     '''
     url_news = row['Weblink']
     html_news_item = gcf.get_webpage_with_retry(url_news,flg_return_rawhtml=True,time_wait=5)
-    print(row['Title'])
+    # print(row['Title'])
     if html_news_item:
         soup_news_item=BeautifulSoup(html_news_item,"lxml")
         titles = soup_news_item.find_all('title')
