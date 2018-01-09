@@ -386,6 +386,8 @@ def json_parse_stock_sh60(json_stock_sh:str):
 
     if dt_json_stksh:
         ls_xsjj = dt_json_stksh['xsjj']
+        if not ls_xsjj:
+            return DataFrame()
         for item in ls_xsjj:
             item = {x:y.strip() if y != '--' and y else None for (x,y) in item.items()}
             dt_sh10 = {}
