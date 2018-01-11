@@ -51,6 +51,7 @@ dbtables = {
     'stock_dailybar_netease':'DD_stock_dailybar_netease',
     'stock_dailybar_sina': 'DD_stock_dailybar_sina',
     'newslist_jd':'DD_newslist_jd',
+    'stocklist_hkus_futuquant':'DD_stocklist_hkus_futuquant',
 }
 dbtemplate_stock_date = """
 CREATE TABLE [%(table)s](

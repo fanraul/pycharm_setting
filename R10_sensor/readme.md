@@ -1,7 +1,6 @@
 # Readme
 ## Template program for different scenarios
 ### stock id + transdate as key
-
 + Current data, web site, single value -> DB: fetch_stock_company_general_info_from_eastmoney
 + Current data, web site, multiple value -> DB:
 + History data, web site, single value  -> DB: 
