@@ -65,14 +65,14 @@ def fetch2DB():
         elif row['stock_type'] == 'IDX':
             dt_stock['sec_type'] = '3'
         dt_stock['lot_size'] = row['lot_size']
-        dt_stock['Trans_Datetime'] = row['listing_date']
+        dt_stock['Trans_Datetime'] = datetime.strptime(row['listing_date'],'%Y-%m-%d')
         dt_stock['stockid_futuquant']=row['stockid']
         ls_dfm_stocklist.append(dt_stock)
 
     dfm_stocklist = DataFrame(ls_dfm_stocklist)
     # step2: format data into prop data type
     gcf.dfm_col_type_conversion(dfm_stocklist, columns=dict_cols_cur, dateformat='%Y-%m-%d')
-    gcf.dfmprint(dfm_stocklist)
+    dfm_stocklist_all.to_excel('stocklist.xls')
 
     key_cols = ['Market_ID','Stock_ID','Trans_Datetime']
     df2db.dfm_to_db_insert_or_update(dfm_stocklist, key_cols, table_name, global_module_name,

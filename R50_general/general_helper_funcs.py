@@ -236,6 +236,8 @@ def dfm_A_minus_B(A:DataFrame,B:DataFrame, key_cols:list)->DataFrame:
     """
     if len(B) == 0:
         return A
+    # dfmprint(A[0:10])
+    # dfmprint(B[0:10])
     B_tmp=B[key_cols].copy()
     B_tmp['tmp_col_duplicated'] = 'Y'
     dfm_merge_by_keycols = A.merge(B_tmp, how='left', on = key_cols)

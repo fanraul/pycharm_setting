@@ -197,6 +197,10 @@ scheduleman = {
         'rule': 'W',
         'weekdays':[0,1,2,3,4,5,6]  #everyday
     },
+    'fetch_stocklist_hkus_from_futuquant':{
+        'rule': 'W',
+        'weekdays':[0,1,2,3,4,5,6]  #everyday
+    },
 }
 
 # the date which shouldn't run the job

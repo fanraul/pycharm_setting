@@ -19,6 +19,7 @@ from R10_sensor import (fetch_stock_fin_reports_from_tquant,
                         fetch_stock_dailybar_from_netease,
                         fetch_stock_current_dailybar_from_sina,
                         fetch_stock_news_cn_from_jd,
+                        fetch_stocklist_hkus_from_futuquant,
                         )
 
 import R50_general.general_helper_funcs as gcf
@@ -54,31 +55,36 @@ if __name__ == '__main__':
     processed_set = {line.strip() for line in read_processed_prog_file_file.readlines()}
 
     try:
-        # step 10: update stock list
+        # step 10.1: update stock list
         ahf.func_call_as_job_with_trace(fetch_stocklist_from_Tquant.fetch2DB,
                                         program_name='fetch_stocklist_from_Tquant',processed_set=processed_set)
         append_processed_prog_log(program_name='fetch_stocklist_from_Tquant')
 
-        # step11: update stock daily bar current info from sina 股票每日交易数据
+        # step 10.2: update stock list of HK and US
+        ahf.func_call_as_job_with_trace(fetch_stocklist_hkus_from_futuquant.fetch2DB,
+                                        program_name='fetch_stocklist_hkus_from_futuquant',processed_set=processed_set)
+        append_processed_prog_log(program_name='fetch_stocklist_hkus_from_futuquant')
+
+        # step 20.1: update stock daily bar current info from sina 股票每日交易数据
         ahf.func_call_as_job_with_trace(fetch_stock_current_dailybar_from_sina.auto_reprocess,
                                         program_name='fetch_stock_current_dailybar_from_sina',
                                         processed_set=processed_set)
         append_processed_prog_log(program_name='fetch_stock_current_dailybar_from_sina')
 
-        # step 12: update stock company general info, 股本信息.
-        ahf.func_call_as_job_with_trace(fetch_stock_company_general_info_from_eastmoney.auto_reprocess,
-                                        program_name='fetch_stock_company_general_info_from_eastmoney',processed_set=processed_set)
-        append_processed_prog_log(program_name='fetch_stock_company_general_info_from_eastmoney')
-
-        # step 20: get stock dailybar 股票每日蜡烛图数据
+        # step 20.2: get stock dailybar 股票每日蜡烛图数据
         ahf.func_call_as_job_with_trace(fetch_stock_dailybar_from_tquant.auto_reprocess,
                                  program_name='fetch_stock_dailybar_from_tquant',processed_set=processed_set)
         append_processed_prog_log(program_name='fetch_stock_dailybar_from_tquant')
 
-        # step 21: get stock dailybar 股票每日蜡烛图数据 网易
+        # step 20.3: get stock dailybar 股票每日蜡烛图数据 网易
         ahf.func_call_as_job_with_trace(fetch_stock_dailybar_from_netease.auto_reprocess,
                                  program_name='fetch_stock_dailybar_from_netease',processed_set=processed_set)
         append_processed_prog_log(program_name='fetch_stock_dailybar_from_netease')
+
+        # step 22: update stock company general info, 股本信息.
+        ahf.func_call_as_job_with_trace(fetch_stock_company_general_info_from_eastmoney.auto_reprocess,
+                                        program_name='fetch_stock_company_general_info_from_eastmoney',processed_set=processed_set)
+        append_processed_prog_log(program_name='fetch_stock_company_general_info_from_eastmoney')
 
         # step 25: get news list from jd
         ahf.func_call_as_job_with_trace(fetch_stock_news_cn_from_jd.fetch2DB,
