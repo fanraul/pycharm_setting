@@ -52,6 +52,7 @@ dbtables = {
     'stock_dailybar_sina': 'DD_stock_dailybar_sina',
     'newslist_jd':'DD_newslist_jd',
     'stocklist_hkus_futuquant':'DD_stocklist_hkus_futuquant',
+    'stock_index_stocks_futuquant':'DD_stock_index_stocks_futuquant',
 }
 dbtemplate_stock_date = """
 CREATE TABLE [%(table)s](
@@ -139,6 +140,24 @@ CREATE TABLE [%(table)s](
 	[Region_ID] ASC,
 	[News_datetime] ASC,
 	[Title] ASC
+))
+"""
+dbtemplate_index_date_multi_value = """
+CREATE TABLE [%(table)s](
+	[Market_ID] [nvarchar](50) NOT NULL,
+	[Index_ID] [nvarchar](50) NOT NULL,
+	[Trans_Datetime] [datetime] NOT NULL,
+	[Sqno] [int] NOT NULL,
+	[Created_datetime] [datetime] NULL,
+	[Created_by] [nvarchar](50) NULL,
+	[Last_modified_datetime] [datetime] NULL,
+	[Last_modified_by] [nvarchar](50) NULL,
+ CONSTRAINT [PK_%(table)s] PRIMARY KEY 
+(
+	[Market_ID] ASC,
+	[Index_ID] ASC,
+	[Trans_Datetime] ASC,
+	[Sqno] ASC
 ))
 """
 

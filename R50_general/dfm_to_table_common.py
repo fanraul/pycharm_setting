@@ -136,6 +136,8 @@ def create_table_by_template(table_name:str,table_type:str):
             crt_str = R50_general.general_constants.dbtemplate_stock_date % {'table':table_name.strip()}
         elif table_type == 'stock_date_multi_value':
             crt_str = R50_general.general_constants.dbtemplate_stock_date_multi_value % {'table':table_name.strip()}
+        # elif table_type == 'index_date_multi_value':
+        #     crt_str = R50_general.general_constants.dbtemplate_index_date_multi_value % {'table':table_name.strip()}
         elif table_type == 'stock_wo_date':
             crt_str = R50_general.general_constants.dbtemplate_stock_wo_date % {'table':table_name.strip()}
         elif table_type == 'catg_date':

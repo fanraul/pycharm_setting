@@ -23,6 +23,11 @@ from pandas import DataFrame
 import tquant.getdata as gt
 from R50_general import general_constants as gc
 
+from futuquant.open_context import *
+from R50_general.general_constants import futu_api_ip as api_ip
+from R50_general.general_constants import futu_api_port as api_port
+
+
 # global variable for log processing
 log = True
 log_folder = gc.Global_Job_Log_Base_Direction
@@ -189,6 +194,8 @@ def dfm_col_type_conversion(dfm:DataFrame,index='',columns= {}, dateformat='%Y-%
         return(int(round(i,0)))
 
     def str_conversion(s):
+        if s == 0:
+            return '0'
         if s:
             return str(s)
         else:
@@ -317,16 +324,16 @@ def setdif_dfm_A_to_B(dfm1,dfm2,cols:list,float_fix_decimal)->set:
     set_dif = set_dfm1_values - set_dfm2_values
     return set_dif
 
-def get_market_calendar(startdate,enddate,market_id:str='') ->list:
-    """
-
-    :param startdate:
-    :param enddate:
-    :param market_id:
-    :return: list of timestamp which is trading day
-    """
-    if market_id == '':
-        return (gt.get_calendar(startdate, enddate))
+# def get_cn_market_calendar_tquant(startdate, enddate, market_id:str= '') ->list:
+#     """
+#
+#     :param startdate:
+#     :param enddate:
+#     :param market_id:
+#     :return: list of timestamp which is trading day
+#     """
+#     if market_id == '':
+#         return (gt.get_calendar(startdate, enddate))
 
 
 def get_last_trading_day(market_id:str='SH'):
@@ -342,6 +349,8 @@ def get_last_trading_day(market_id:str='SH'):
         if len(dfm_000001) == 0:
             assert False,'Can not get last trading day! '
         last_trading_day = datetime.strptime(dfm_000001.iloc[len(dfm_000001) - 1]['date'],'%Y-%m-%d')
+    else:
+        last_trading_day = datetime.strptime(get_trading_days_futuquant(market_id)[0],'%Y-%m-%d')
 
     return last_trading_day.date()
 
@@ -349,6 +358,15 @@ def get_last_trading_daytime(market_id:str='SH'):
     last_trading_day = get_last_trading_day(market_id)
     last_trading_daytime = datetime.strptime(str(last_trading_day), '%Y-%m-%d')
     return last_trading_daytime
+
+def get_trading_days_futuquant(market, start_date=None, end_date=None):
+    # 实例化行情上下文对象
+    quote_ctx = OpenQuoteContext(api_ip, api_port)
+    ret,ls_trading_days = quote_ctx.get_trading_days(market, start_date, end_date)
+    if ret==RET_ERROR:
+        assert 0==1,"Fatal error, Can't not get trading days for market %s, Err msg: %s" %(market,ls_trading_days)
+    quote_ctx.close()
+    return ls_trading_days
 
 def send_email(receiver, title, content, attachments):
     From = "fanraul@163.com"
@@ -490,6 +508,8 @@ def intN(i:str):
         i = i.replace('.00','')
         return int(i)
 
+
+
 def get_stock_current_trading_info_sina(mktstks,return_format,batch_size = 40):
     # TODO new functions need to be developed based on future usage, currently only work for one mktstk and return one dfm.
     """
@@ -614,6 +634,18 @@ def get_stock_current_trading_info_sina(mktstks,return_format,batch_size = 40):
     31：”15:05:32″，交易时间；
     32: "00",unkown col
 '''
+
+def get_mkt_stk_futuquant(code):
+    # parse code of futuquant and return market_id and stock_id
+    ls_code = code.split('.')
+    if len(ls_code) == 2:
+        return tuple(ls_code)
+    elif len(ls_code) > 2:
+        Market_ID = ls_code[0]
+        Stock_ID = '.'.join(ls_code[1:])
+        return (Market_ID,Stock_ID)
+    else:
+        assert 0 == 1, 'Wrong stock code: %s' % ls_code
 
 if __name__ == "__main__":
     # print(get_cn_stocklist())
