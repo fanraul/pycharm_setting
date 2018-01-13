@@ -10,6 +10,7 @@ from R50_general.general_helper_funcs import logprint
 # from R50_general.general_helper_funcs import log_folder,log_job_name
 import R50_general.general_helper_funcs as ghf
 import R50_general.general_constants as gc
+from http.client import BadStatusLine
 
 
 def getweekday():
@@ -17,7 +18,7 @@ def getweekday():
 
     # overwrite weekday as certain date for re-processing only***********************
     # for example, reprocess at Saturday and assume it it Friday.
-    #weekday = 6
+    # weekday = 4
     #********************************************************************************
     return weekday
 
@@ -47,7 +48,7 @@ def auto_reprocess_dueto_ipblock(identifier:str,func_to_call,wait_seconds:int = 
             func_to_call(row['Stock_ID'])
             append_log_file.write(row['Stock_ID'] + '\n')
             append_log_file.flush()  #由于缓冲，字符串可能实际上没有出现在该文件中，直到调用flush()或close()方法被调用.
-        except (urllib.error.HTTPError,urllib.error.URLError,http.client.RemoteDisconnected,ConnectionResetError):
+        except (urllib.error.HTTPError,urllib.error.URLError,http.client.RemoteDisconnected,ConnectionResetError,BadStatusLine):
             append_log_file.close()
             read_log_file.close()
             logprint('Web scrapping exception raised, auto reprocess after %s seconds. Current time is %s' % (wait_seconds,datetime.now()))

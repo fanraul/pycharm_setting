@@ -18,7 +18,7 @@ import pandas as pd
 import tushare as ts
 from bs4 import BeautifulSoup
 from pandas import DataFrame
-
+from http.client import BadStatusLine
 
 import tquant.getdata as gt
 from R50_general import general_constants as gc
@@ -122,6 +122,10 @@ def get_webpage(weblink_str :str, time_wait = 0, flg_return_json= False,decode='
         raise e
     except ConnectionResetError as e:
         logprint('Exception ConnectionResetError raised, Remote end closed connection without response')
+        raise e
+
+    except BadStatusLine as e:
+        logprint('Exception BadStatusLine raised, reason unknown?!')
         raise e
 
     except Exception as e:
