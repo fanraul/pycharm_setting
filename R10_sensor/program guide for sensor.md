@@ -1,24 +1,13 @@
 # Readme
 ## Program overview
-程序名|数据对象|数据源|存储模式|数据更新函数|其他
--|-|-|-|-|-
 
-1.学号|姓名|分数
-2.-|-|-
-3.小明|男|75
-4.小红|女|79
-5.小陆|男|92
+ 程序名 | 数据对象 | 数据源 | DB更新函数 | 其他
+ ---   |---      |---    |---        |---
+fetch_stocklist_hkus_from_futuquant | Stocklist_of_CN/HK/US:DD_stocklist_hkus_futuquant(key:market/stock/listing date)  | Futuquant_api |General DB update func:dfm_to_db_insert_or_update | |
+fetch_stock_index_stocks_from_futuquant|Stocks_of_index_for_CN/HK/US:DD_stock_index_stocks_futuquant<br>(key:market/stock/valid_from/multi) |Futuquant_api|Mtkstk multi current(last_trading_date) func:load_dfm_to_db_multi_value_by_mkt_stk_cur
+fetch_stock_news_cn_from_jd|
 
 
-|学号|姓名|分数|
-|-|-|-|
-|小明|男|75|
-|小红|女|79|
-|小陆|男|92|
-
-| Header 1 | Header 2 |
-| -------- | -------- |
-| Data 1   | Data 2   |
 
 ## Template program for different scenarios
 ### stock id + transdate as key
@@ -38,3 +27,13 @@
 ### stock id  as key
 ### obj other than stock id + transdate as key
 ### obj other than stock id as key
+
+| Command | Description |
+| --- | --- |
+| git status | List all new or modified files |
+| git diff | Show file differences that haven't been staged |
+
+Command|Description
+---|---
+git status|List all new or modified files
+git diff|Show file differences that haven't been staged
