@@ -79,9 +79,3 @@ if __name__ == "__main__":
     # print(get_index_stocks(api_ip, api_port, 'HK.800000'))
     # print(gcf.get_last_trading_day('HK'))
     fetch2DB()
-
-
-
-
-
-
