@@ -87,7 +87,6 @@ def fetch2DB():
         for index,row in dfm_obselete_catg.iterrows():
             logprint('Category Type %s Name %s is obselete! Please double check!' %(row['Catg_Type'],row['Catg_Name']))
 
-    exit(1)
     # 2.2 insert new stock category relationship into DB
     # create DB table and chars
     table_name_concept = R50_general.general_constants.dbtables['stock_category_relation_qq']
