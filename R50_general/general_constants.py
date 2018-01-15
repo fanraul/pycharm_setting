@@ -53,6 +53,7 @@ dbtables = {
     'newslist_jd':'DD_newslist_jd',
     'stocklist_hkus_futuquant':'DD_stocklist_hkus_futuquant',
     'stock_index_stocks_futuquant':'DD_stock_index_stocks_futuquant',
+    'category':'ZCFG_category'
 }
 dbtemplate_stock_date = """
 CREATE TABLE [%(table)s](

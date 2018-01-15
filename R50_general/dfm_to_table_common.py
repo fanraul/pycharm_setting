@@ -145,7 +145,7 @@ def create_table_by_template(table_name:str,table_type:str):
         elif table_type == 'jd_newslist':
             crt_str = R50_general.general_constants.dbtemplate_jd_newslist % {'table': table_name.strip()}
         else:
-            raise
+            assert 0==1, 'Non-known table type:%s' %table_type
         conn.execute(crt_str)
         logprint('Table %s is created' %table_name)
 

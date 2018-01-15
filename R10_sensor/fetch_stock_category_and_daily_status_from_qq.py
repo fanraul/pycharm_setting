@@ -77,6 +77,7 @@ def fetch2DB():
         logprint('New Category added:\n' ,'\n'.join([dfm_new_catg.iloc[i]['Catg_Type'] + ':' +
                                                    dfm_new_catg.iloc[i]['Catg_Name']
                                                    for i in range(len(dfm_new_catg))]), sep = '\n')
+        dfm_new_catg['Catg_Id'] = dfm_new_catg['Catg_Name']
         df2db.load_snapshot_dfm_to_db(dfm_new_catg,'ZCFG_category',w_timestamp=True)
 
     # inform obsolete category to user to make sure no error occures,no action in db side
@@ -86,7 +87,7 @@ def fetch2DB():
         for index,row in dfm_obselete_catg.iterrows():
             logprint('Category Type %s Name %s is obselete! Please double check!' %(row['Catg_Type'],row['Catg_Name']))
 
-
+    exit(1)
     # 2.2 insert new stock category relationship into DB
     # create DB table and chars
     table_name_concept = R50_general.general_constants.dbtables['stock_category_relation_qq']
@@ -232,7 +233,7 @@ def parse_concept(ls_catgs:list):
             ls_dfm_catg_daily_trans.append(dt_catg_daily_trans)
         else:
             # TODO: error handling
-            raise
+            assert 0==1,'TODO:error handling!'
 
     # TODO:error handling
     if len(ls_dfm_catg) != catgs_num:

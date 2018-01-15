@@ -512,7 +512,11 @@ def intN(i:str):
         i = i.replace('.00','')
         return int(i)
 
-
+def get_index_stocks_futuquant(ip, port, strcode):
+    quote_ctx = OpenQuoteContext(ip, port)
+    ret, data_frame = quote_ctx.get_plate_stock(strcode)
+    quote_ctx.close()
+    return ret, data_frame
 
 def get_stock_current_trading_info_sina(mktstks,return_format,batch_size = 40):
     # TODO new functions need to be developed based on future usage, currently only work for one mktstk and return one dfm.
