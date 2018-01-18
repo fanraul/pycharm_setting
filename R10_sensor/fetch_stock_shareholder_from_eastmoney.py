@@ -9,7 +9,7 @@ import R50_general.general_constants
 import R50_general.general_helper_funcs as gcf
 from R50_general.general_helper_funcs import logprint, parse_chinese_uom, floatN, intN
 
-global_module_name = 'fetch_stock_shareholder_from_eastmoney'
+global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 
 
 def fetch2DB(stockid:str = ''):

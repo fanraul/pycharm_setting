@@ -16,7 +16,7 @@ from R50_general.general_helper_funcs import logprint
 import R50_general.dfm_to_table_common as df2db
 # from pyodbc import IntegrityError
 from sqlalchemy.exc import IntegrityError
-global_module_name = 'fetch_stock_news_cn_from_jd'
+global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 general_pages_to_fetch = 200
 general_start_page = 0
 general_pages_to_split = 1

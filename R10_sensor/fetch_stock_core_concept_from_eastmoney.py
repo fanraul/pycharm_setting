@@ -15,7 +15,7 @@ import R50_general.dfm_to_table_common as df2db
 import json
 import R50_general.advanced_helper_funcs as ahf
 
-global_module_name = 'fetch_stock_core_concept_from_eastmoney'
+global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 
 
 def fetch2DB(stockid:str = ''):

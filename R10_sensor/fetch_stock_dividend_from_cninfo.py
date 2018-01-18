@@ -14,7 +14,7 @@ from R50_general.general_helper_funcs import logprint
 import R50_general.dfm_to_table_common as df2db
 
 
-global_module_name = 'fetch_stock_dividend_from_cninfo'
+global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 
 
 #use Tquant module to get the data, the datasource of Tquant is cninfo.

@@ -15,7 +15,7 @@ import R50_general.dfm_to_table_common as df2db
 
 timestamp = datetime.now()
 
-global_module_name = 'fetch_stock_structure_hist_from_sina'
+global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 
 
 def fetch2DB(stockid:str = ''):

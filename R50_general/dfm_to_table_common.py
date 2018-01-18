@@ -142,6 +142,8 @@ def create_table_by_template(table_name:str,table_type:str):
             crt_str = R50_general.general_constants.dbtemplate_stock_wo_date % {'table':table_name.strip()}
         elif table_type == 'catg_date':
             crt_str = R50_general.general_constants.dbtemplate_catg_date % {'table': table_name.strip()}
+        elif table_type == 'catg_date_multi_value_futuquant':
+            crt_str = R50_general.general_constants.dbtemplate_catg_date_multi_value_futuquant % {'table': table_name.strip()}
         elif table_type == 'jd_newslist':
             crt_str = R50_general.general_constants.dbtemplate_jd_newslist % {'table': table_name.strip()}
         else:
@@ -586,6 +588,7 @@ def insert_multi_value_dfm_to_db_by_key_cols_transdate(dt_key_cols:dict,trans_da
     ls_key_col_items = dt_key_cols.items()
     ls_key_cols_value = [x[1] for x in ls_key_col_items]       # ['SH','600000']
     str_key_cols = ','.join([x[0] for x in ls_key_col_items])
+    mark_key_cols = ','.join(['?']*len(dt_key_cols))
 
     # insert into db
     ls_ins_pars = []
@@ -601,8 +604,8 @@ def insert_multi_value_dfm_to_db_by_key_cols_transdate(dt_key_cols:dict,trans_da
                        + tuple(ls_dfmrow_dbtype_aligned))
 
     if ins_str_cols:
-        ins_str = '''INSERT INTO %s (%s,Trans_Datetime,Sqno,Created_datetime,Created_by,%s) VALUES (?,?,?,?,?,?,%s)''' % (
-            table_name,str_key_cols,ins_str_cols, ins_str_pars)
+        ins_str = '''INSERT INTO %s (%s,Trans_Datetime,Sqno,Created_datetime,Created_by,%s) VALUES (%s,?,?,?,?,%s)''' % (
+            table_name,str_key_cols,ins_str_cols,mark_key_cols, ins_str_pars)
         # print(ins_str)
         try:
             conn.execute(ins_str, ls_ins_pars)
@@ -657,6 +660,7 @@ def load_dfm_to_db_single_value_by_key_cols_cur(dt_key_cols:dict,dfm_data:DataFr
         ls_key_cols_value = [x[1] for x in ls_key_col_items]       # ['SH','600000']
 
         str_key_cols = ','.join([x[0] for x in ls_key_col_items])
+        mark_key_cols = ','.join(['?'] * len(dt_key_cols))
         str_sel_key_cols = ' and '.join(ls_sel_key_cols)
 
         last_trading_day = gcf.get_last_trading_day()
@@ -711,8 +715,8 @@ def load_dfm_to_db_single_value_by_key_cols_cur(dt_key_cols:dict,dfm_data:DataFr
             ls_ins_pars = []
             ls_ins_pars.append((*ls_key_cols_value, last_trading_daytime, timestamp, dict_misc_pars['update_by'])
                                + tuple(ls_dfmrow_dbtype_aligned))
-            ins_str = '''INSERT INTO %s (%s,Trans_Datetime,Created_datetime,Created_by,%s) VALUES (?,?,?,?,?,%s)''' % (
-                table_name, str_key_cols, ins_str_cols, ins_str_pars)
+            ins_str = '''INSERT INTO %s (%s,Trans_Datetime,Created_datetime,Created_by,%s) VALUES (%s,?,?,?,%s)''' % (
+                table_name, str_key_cols, ins_str_cols,mark_key_cols, ins_str_pars)
             # print(ins_str)
             try:
                 for ins_par in ls_ins_pars:
@@ -844,6 +848,7 @@ def load_dfm_to_db_single_value_by_key_cols_wo_datetime(dt_key_cols:dict,dfm_dat
         ls_key_cols_value = [x[1] for x in ls_key_col_items]       # ['SH','600000']
 
         str_key_cols = ','.join([x[0] for x in ls_key_col_items])
+        mark_key_cols = ','.join(['?'] * len(dt_key_cols))
         str_sel_key_cols = ' and '.join(ls_sel_key_cols)
 
         last_trading_day = gcf.get_last_trading_day()
@@ -892,8 +897,8 @@ def load_dfm_to_db_single_value_by_key_cols_wo_datetime(dt_key_cols:dict,dfm_dat
             ls_ins_pars = []
             ls_ins_pars.append((*ls_key_cols_value, timestamp, dict_misc_pars['update_by'])
                                + tuple(ls_dfmrow_dbtype_aligned))
-            ins_str = '''INSERT INTO %s (%s,Created_datetime,Created_by,%s) VALUES (?,?,?,?,%s)''' % (
-                table_name, str_key_cols, ins_str_cols, ins_str_pars)
+            ins_str = '''INSERT INTO %s (%s,Created_datetime,Created_by,%s) VALUES (%s,?,?,%s)''' % (
+                table_name, str_key_cols, ins_str_cols, mark_key_cols, ins_str_pars)
             # print(ins_str)
             try:
                 for ins_par in ls_ins_pars:

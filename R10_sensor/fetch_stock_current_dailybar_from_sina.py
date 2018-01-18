@@ -10,7 +10,7 @@ import R50_general.general_helper_funcs as gcf
 import R50_general.dfm_to_table_common as df2db
 import R50_general.advanced_helper_funcs as ahf
 
-global_module_name = 'fetch_stock_current_dailybar_from_sina'
+global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 
 def fetch2DB(stockid:str):
     '''

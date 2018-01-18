@@ -19,7 +19,7 @@ import R50_general.advanced_helper_funcs as ahf
 import R50_general.general_constants
 import R50_general.general_helper_funcs as gcf
 
-global_module_name = 'fetch_stock_category_from_futuquant'
+global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 
 def fetch2DB():
     # 1.1 get category code list
@@ -70,68 +70,47 @@ def fetch2DB():
 
     # dfm_cur_catg.to_excel('catg_list.xls')
 
-    # # 2.1 insert new category into DB
-    # # get db category list
-    # dfm_db_catg = df2db.get_catg('QQ')
-    # dfm_new_catg = gcf.dfm_A_minus_B(dfm_cur_catg,dfm_db_catg,['Catg_Origin','Catg_Type','Catg_Name'])
-    #
-    # # print(dfm_db_catg,dfm_cur_catg,dfm_new_catg,sep = '\n')
-    # if len(dfm_new_catg) > 0:
-    #     # gcf.dfmprint(dfm_cur_catg)
-    #     logprint('New Category added:\n' ,'\n'.join([dfm_new_catg.iloc[i]['Catg_Type'] + ':' +
-    #                                                dfm_new_catg.iloc[i]['Catg_Name']
-    #                                                for i in range(len(dfm_new_catg))]), sep = '\n')
-    #     df2db.load_snapshot_dfm_to_db(dfm_new_catg,'ZCFG_category',w_timestamp=True)
-    #
-    # # inform obsolete category to user to make sure no error occures,no action in db side
-    # dfm_obselete_catg = gcf.dfm_A_minus_B(dfm_db_catg, dfm_cur_catg,  ['Catg_Origin', 'Catg_Type', 'Catg_Name'])
-    # if len(dfm_obselete_catg) > 0:
-    #     # print(dfm_obselete_catg)
-    #     for index,row in dfm_obselete_catg.iterrows():
-    #         logprint('Category Type %s Name %s is obselete! Please double check!' %(row['Catg_Type'],row['Catg_Name']))
+    # 1.2 update category and related stocks info into DB
+    dfm_db_chars = df2db.get_chars('FUTUQUANT', ['CATG'])
+    dict_misc_pars = {}
+    dict_misc_pars['char_origin'] = 'FUTUQUANT'
+    dict_misc_pars['char_freq'] = "D"
+    dict_misc_pars['allow_multiple'] = 'Y'
+    dict_misc_pars['created_by'] = dict_misc_pars['update_by'] = global_module_name
+    dict_misc_pars['char_usage'] = 'CATG'
 
+    # check whether db table is created.
+    table_name = R50_general.general_constants.dbtables['stock_category_stocks_futuquant']
+    df2db.create_table_by_template(table_name, table_type='catg_date_multi_value_futuquant')
+    dict_cols_cur = {'MtkStk_ID': 'nvarchar(50)',
+                     'Market_ID':'nvarchar(50)',
+                     'Stock_ID':'nvarchar(50)',
+                     'lot_size': 'int',
+                     'owner_market': 'nvarchar(10)',
+                     'stock_child_type': 'nvarchar(10)',
+                     'stock_type':'nvarchar(10)',
+                     }
+    df2db.add_new_chars_and_cols(dict_cols_cur, list(dfm_db_chars['Char_ID']), table_name, dict_misc_pars)
 
+    dfm_cur_catg.drop_duplicates(subset=['Catg_Id'],inplace=True)
+    ls_dfm_catgstocks_all =[]
+    for index, row in dfm_cur_catg.iterrows():
+        ret, dfm_catg_stocks = gcf.get_plate_stocks_futuquant(api_ip, api_port, row['Catg_Id'])
+        if ret == RET_ERROR:
+            logprint('Failed to get stocks under catg %s. Err message: %s' %(row['Catg_Id']+':'+row['Catg_Name'],dfm_catg_stocks))
+        else:
+            dfm_catg_stocks['Market_ID'] = dfm_catg_stocks.apply(lambda s:gcf.get_mkt_stk_futuquant(s['code'])[0] ,axis =1)
+            dfm_catg_stocks['Stock_ID'] = dfm_catg_stocks.apply(lambda s:gcf.get_mkt_stk_futuquant(s['code'])[1] ,axis =1)
+            dfm_catg_stocks.rename(columns={'code':'MtkStk_ID'},inplace=True)
+            del dfm_catg_stocks['stock_name']
+            gcf.dfm_col_type_conversion(dfm_catg_stocks, columns=dict_cols_cur)
 
-    # dfm_db_chars = df2db.get_chars('FUTUQUANT', ['CATG'])
-    # dict_misc_pars = {}
-    # dict_misc_pars['char_origin'] = 'FUTUQUANT'
-    # dict_misc_pars['char_freq'] = "D"
-    # dict_misc_pars['allow_multiple'] = 'Y'
-    # dict_misc_pars['created_by'] = dict_misc_pars['update_by'] = global_module_name
-    # dict_misc_pars['char_usage'] = 'IDXSTOCK'
-    #
-    # # check whether db table is created.
-    # table_name = R50_general.general_constants.dbtables['stock_index_stocks_futuquant']
-    # df2db.create_table_by_template(table_name, table_type='stock_date_multi_value')
-    # dict_cols_cur = {'Sub_Stock_ID': 'nvarchar(50)',
-    #                  'lot_size': 'int',
-    #                  'owner_market': 'nvarchar(10)',
-    #                  'stock_child_type': 'nvarchar(10)',
-    #                  'stock_type':'nvarchar(10)',
-    #                  }
-    # df2db.add_new_chars_and_cols(dict_cols_cur, list(dfm_db_chars['Char_ID']), table_name, dict_misc_pars)
-    #
-    # dfm_idxs = get_idx_all()
-    # ls_dfm_idxstocks_all =[]
-    # for index, row in dfm_idxs.iterrows():
-    #     code = row['Market_ID']+'.'+row['Stock_ID']
-    #     ret, dfm_idx_stocks = get_index_stocks(api_ip, api_port, code)
-    #     if ret == RET_ERROR:
-    #         logprint('Failed to get stocks under idx %s. Err message: %s' %(code,dfm_idx_stocks))
-    #     else:
-    #         dfm_idx_stocks['Sub_Stock_ID'] = dfm_idx_stocks.apply(lambda s:gcf.get_mkt_stk_futuquant(s['code'])[1] ,axis =1)
-    #
-    #         del dfm_idx_stocks['stock_name']
-    #         del dfm_idx_stocks['code']
-    #         gcf.dfm_col_type_conversion(dfm_idx_stocks, columns=dict_cols_cur)
-    #         df2db.load_dfm_to_db_multi_value_by_mkt_stk_cur(row['Market_ID'],
-    #                                                         row['Stock_ID'],
-    #                                                         dfm_idx_stocks,
-    #                                                         table_name,
-    #                                                         dict_misc_pars,
-    #                                                         process_mode='w_check')
-    #         ls_dfm_idxstocks_all.append(dfm_idx_stocks)
-    # pd.concat(ls_dfm_idxstocks_all).to_excel('idx_stocks_all.xls')
+            dt_key_cols = {'Catg_Id': row['Catg_Id']}
+            # gcf.dfmprint(dfm_catg_stocks)
+            df2db.load_dfm_to_db_multi_value_by_key_cols_cur(dt_key_cols, dfm_catg_stocks, table_name, dict_misc_pars,
+                                                             process_mode='w_check',float_fix_decimal = 4)
+            ls_dfm_catgstocks_all.append(dfm_catg_stocks)
+    pd.concat(ls_dfm_catgstocks_all).to_excel('catg_stocks_all.xls')
 
 
 def get_plate_list_futu(ip,port,market,plate_class):
@@ -145,4 +124,5 @@ def get_plate_list_futu(ip,port,market,plate_class):
 if __name__ == "__main__":
     # gcf.dfmprint(get_plate_list_futu(api_ip, api_port, 'HK','ALL'))
     # gcf.dfmprint(gcf.get_index_stocks_futuquant(api_ip,api_port,'HK.BK1129'))
-    fetch2DB()
+    # fetch2DB()
+    print(global_module_name)

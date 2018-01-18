@@ -19,7 +19,7 @@ import R50_general.advanced_helper_funcs as ahf
 import R50_general.general_constants
 import R50_general.general_helper_funcs as gcf
 
-global_module_name = 'fetch_stocklist_hkus_from_futuquant'
+global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 
 def fetch2DB():
     dfm_db_chars = df2db.get_chars('FUTUQUANT', ['STOCKLIST'])

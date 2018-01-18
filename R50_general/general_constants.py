@@ -53,7 +53,8 @@ dbtables = {
     'newslist_jd':'DD_newslist_jd',
     'stocklist_hkus_futuquant':'DD_stocklist_hkus_futuquant',
     'stock_index_stocks_futuquant':'DD_stock_index_stocks_futuquant',
-    'category':'ZCFG_category'
+    'category':'ZCFG_category',
+    'stock_category_stocks_futuquant':'DD_stock_category_stocks_futuquant',
 }
 dbtemplate_stock_date = """
 CREATE TABLE [%(table)s](
@@ -119,7 +120,22 @@ CREATE TABLE [%(table)s](
 	[Trans_Datetime] ASC
 ))
 """
-
+dbtemplate_catg_date_multi_value_futuquant = """
+CREATE TABLE [%(table)s](
+	[Catg_Id] [nvarchar](50) NOT NULL,
+	[Trans_Datetime] [datetime] NOT NULL,
+	[Sqno] [int] NOT NULL,
+	[Created_datetime] [datetime] NULL,
+	[Created_by] [nvarchar](50) NULL,
+	[Last_modified_datetime] [datetime] NULL,
+	[Last_modified_by] [nvarchar](50) NULL,
+ CONSTRAINT [PK_%(table)s] PRIMARY KEY 
+(
+	[Catg_Id] ASC,
+	[Trans_Datetime] ASC,
+	[Sqno] ASC
+))
+"""
 dbtemplate_jd_newslist = """
 CREATE TABLE [%(table)s](
 	[Region_ID] [nvarchar](50) NOT NULL,
@@ -219,9 +235,18 @@ scheduleman = {
     },
     'fetch_stocklist_hkus_from_futuquant':{
         'rule': 'W',
-        'weekdays':[0,1,2,3,4,5,6]  #everyday
+        'weekdays':[0,1,2,3,4,6]  # everyday except Saturday
+    },
+    'fetch_stock_category_from_futuquant': {
+          'rule': 'W',
+          'weekdays': [0, 1, 2, 3, 4, 6]  # everyday except Saturday
+    },
+    'fetch_stock_index_stocks_from_futuqunat': {
+          'rule': 'W',
+          'weekdays': [0, 1, 2, 3, 4, 6]  # everyday except Saturday
     },
 }
 
 # the date which shouldn't run the job
-excluded_dates =['2018-1-1',]
+excluded_dates =['2018-1-1',
+                 '2019-1-1']

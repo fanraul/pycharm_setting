@@ -12,6 +12,7 @@ from datetime import datetime
 from email.mime.base import MIMEBase  # import MIMEBase
 from email.mime.text import MIMEText  # import MIMEText
 import re
+import sys
 
 import numpy as np
 import pandas as pd
@@ -512,11 +513,26 @@ def intN(i:str):
         i = i.replace('.00','')
         return int(i)
 
-def get_index_stocks_futuquant(ip, port, strcode):
+def get_plate_stocks_futuquant(ip, port, strcode):
     quote_ctx = OpenQuoteContext(ip, port)
     ret, data_frame = quote_ctx.get_plate_stock(strcode)
     quote_ctx.close()
     return ret, data_frame
+
+def get_cur_file_name_by_module_name(name):
+    """
+    use module's __name__ to get the file name without .py
+    :param name:
+    :return:
+    """
+    if name == '__main__':
+        # it is main script, get file name from sys.argv[0]
+        # samle:'C:\\Program Files\\JetBrains\\PyCharm Community Edition 2017.3.2\\helpers\\pydev\\pydevconsole.py'
+        str_filename = sys.argv[0].split('/')[-1]
+        return str_filename.split('.')[0]
+    else:
+        # it is run as a module, get file name from module's varable __name__
+        return name.split('.')[-1]
 
 def get_stock_current_trading_info_sina(mktstks,return_format,batch_size = 40):
     # TODO new functions need to be developed based on future usage, currently only work for one mktstk and return one dfm.
@@ -701,4 +717,7 @@ if __name__ == "__main__":
 
     # print(isStrNumber('123.3'))
     # print(isStrNumber('123.3.4'))
-    get_stock_current_trading_info_sina(['sz300712','sz300619'],return_format=1)
+    # get_stock_current_trading_info_sina(['sz300712','sz300619'],return_format=1)
+
+    import R10_sensor.fetch_stock_category_from_futuquant
+    print(R10_sensor.fetch_stock_category_from_futuquant.global_module_name)

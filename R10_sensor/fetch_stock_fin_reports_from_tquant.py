@@ -13,7 +13,7 @@ import R50_general.advanced_helper_funcs as ahf
 
 import tquant.getdata as gt
 
-global_module_name = 'fetch_stock_fin_reports_from_tquant'
+global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 
 """
 this report use tquant module's get_financial func to get balance report and store them into sql server

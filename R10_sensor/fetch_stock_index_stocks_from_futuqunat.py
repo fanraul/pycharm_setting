@@ -19,7 +19,7 @@ import R50_general.advanced_helper_funcs as ahf
 import R50_general.general_constants
 import R50_general.general_helper_funcs as gcf
 
-global_module_name = 'fetch_stock_index_stocks_from_futuquant'
+global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 
 def fetch2DB():
     dfm_db_chars = df2db.get_chars('FUTUQUANT', ['IDXSTOCK'])
@@ -45,7 +45,7 @@ def fetch2DB():
     ls_dfm_idxstocks_all =[]
     for index, row in dfm_idxs.iterrows():
         code = row['Market_ID']+'.'+row['Stock_ID']
-        ret, dfm_idx_stocks = gcf.get_index_stocks_futuquant(api_ip, api_port, code)
+        ret, dfm_idx_stocks = gcf.get_plate_stocks_futuquant(api_ip, api_port, code)
         if ret == RET_ERROR:
             logprint('Failed to get stocks under idx %s. Err message: %s' %(code,dfm_idx_stocks))
         else:
@@ -61,12 +61,12 @@ def fetch2DB():
                                                             dict_misc_pars,
                                                             process_mode='w_check')
             ls_dfm_idxstocks_all.append(dfm_idx_stocks)
-    pd.concat(ls_dfm_idxstocks_all).to_excel('idx_stocks_all.xls')
+    # pd.concat(ls_dfm_idxstocks_all).to_excel('idx_stocks_all.xls')
 
 
 def get_idx_all():
     table_name = R50_general.general_constants.dbtables['stocklist_hkus_futuquant']
-    dfm_cond = DataFrame([{'db_col': 'sec_type', 'db_oper': '=', 'db_val': "'3'"},])
+    dfm_cond = DataFrame([{'db_col': 'stock_type', 'db_oper': '=', 'db_val': "'IDX'"},])
     return df2db.get_data_from_DB(table_name, dfm_cond)
 
 if __name__ == "__main__":
