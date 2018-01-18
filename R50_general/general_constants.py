@@ -199,7 +199,7 @@ scheduleman = {
     },
     'fetch_stock_core_concept_from_eastmoney':{
         'rule': 'W',
-        'weekdays': [0, 3]  # monday, Thursday
+        'weekdays': [1, 3]  # Tuesday, Thursday
     },
     'fetch_stock_structure_hist_from_sina':{
         'rule': 'W',
@@ -207,7 +207,7 @@ scheduleman = {
     },
     'fetch_stock_shareholder_from_eastmoney':{
         'rule': 'W',
-        'weekdays': [0, 4]   # monday, Thursday
+        'weekdays': [0, 4]   # monday, Friday
     },
     'fetch_stock_company_general_info_from_eastmoney':{
         'rule': 'W',
@@ -227,7 +227,7 @@ scheduleman = {
     },
     'fetch_stock_dividend_from_cninfo':{
         'rule': 'W',
-        'weekdays': [0, 2, 4, ]  # Monday,wednesday,Friday
+        'weekdays': [0, 3, ]  # Monday,Thursday
     },
     'fetch_stock_news_cn_from_jd':{
         'rule': 'W',

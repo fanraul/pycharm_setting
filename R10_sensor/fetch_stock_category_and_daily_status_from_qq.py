@@ -5,6 +5,7 @@ import numpy as np
 from bs4 import BeautifulSoup
 import urllib.request
 import re
+import time
 
 from datetime import datetime
 
@@ -163,25 +164,31 @@ def parse_stock_under_catg(dfm_catgs:DataFrame) ->dict:
     dt_stkcatgs = {}
     for index,row in dfm_catgs.iterrows():
         catg_code = row['Catg_Reference']
-        url_catgstklist = R50_general.general_constants.weblinks['stock_category_w_detail_qq'][2] % {'catg_code':catg_code}
-        soup_stklst = gcf.get_webpage_with_retry(url_catgstklist)
-        list_data = re.findall("data:'(.*)'", str(soup_stklst))
+        retry_times = 1
+        while True:
+            retry_times +=1
+            url_catgstklist = R50_general.general_constants.weblinks['stock_category_w_detail_qq'][2] % {'catg_code':catg_code}
+            soup_stklst = gcf.get_webpage_with_retry(url_catgstklist)
+            list_data = re.findall("data:'(.*)'", str(soup_stklst))
 
-        if list_data:
-            ls_stk = list_data[0].split(',')
-            ls_stk = [stk.strip().upper() for stk in ls_stk]
-            # print(ls_stk)
-            for stkcode in ls_stk:
-                ls_catgs = dt_stkcatgs.get(stkcode, [])
-                # print(ls_catgs)
-                if ls_catgs:
-                    ls_catgs.append({'Catg_Type': row['Catg_Type'],'Catg_Name': row['Catg_Name']})
-                else:
-                    dt_stkcatgs[stkcode] = [{'Catg_Type': row['Catg_Type'],'Catg_Name': row['Catg_Name']}]
-        else:
-            # TODO: error handling
-            logprint('Exception: Catg %s has no stock assigned' %row['Catg_Name'] )
-            assert 0==1, 'inconsistent found, please check!'
+            if list_data:
+                ls_stk = list_data[0].split(',')
+                ls_stk = [stk.strip().upper() for stk in ls_stk]
+                # print(ls_stk)
+                for stkcode in ls_stk:
+                    ls_catgs = dt_stkcatgs.get(stkcode, [])
+                    # print(ls_catgs)
+                    if ls_catgs:
+                        ls_catgs.append({'Catg_Type': row['Catg_Type'],'Catg_Name': row['Catg_Name']})
+                    else:
+                        dt_stkcatgs[stkcode] = [{'Catg_Type': row['Catg_Type'],'Catg_Name': row['Catg_Name']}]
+                break
+            elif retry_times < 10:
+                time.sleep(3)
+            else:
+                # TODO: error handling
+                logprint('Exception: Catg %s has no stock assigned' %row['Catg_Name'] )
+                assert 0==1, 'inconsistent found, please check!'
 
     return dt_stkcatgs
 
