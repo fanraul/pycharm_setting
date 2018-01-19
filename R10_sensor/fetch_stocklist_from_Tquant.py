@@ -13,6 +13,9 @@ from R50_general.general_helper_funcs import logprint
 import tquant.getdata as gt
 import tquant.myquant as mt
 import R50_general.dfm_to_table_common as df2db
+import R50_general.general_helper_funcs as gcf
+
+global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 
 def fetch2DB():
     """
@@ -62,7 +65,7 @@ def fetch2DB():
                                 sec_type,
                                 is_active,
                                 timestamp,
-                                'fetch_stocklist_from_Tquant',
+                                global_module_name,
                                 margin_ratio,
                                 multiplier,
                                 price_tick,
@@ -79,7 +82,7 @@ def fetch2DB():
                                 sec_type,
                                 is_active,
                                 timestamp,
-                                'fetch_stocklist_from_Tquant',
+                                global_module_name,
                                 margin_ratio,
                                 multiplier,
                                 price_tick,

@@ -61,7 +61,7 @@ def fetch2DB_individual(item : str, dfm_db_chars):
     dict_misc_pars['char_origin'] = 'Tquant'
     dict_misc_pars['char_freq'] = "D"
     dict_misc_pars['allow_multiple'] ='N'
-    dict_misc_pars['created_by'] = dict_misc_pars['update_by'] ='fetch_stock_fin_reports_from_tquant'
+    dict_misc_pars['created_by'] = dict_misc_pars['update_by'] = global_module_name
 
     for i in range(len(ls_finreports)):
         #get db table name for fin report

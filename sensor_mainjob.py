@@ -21,7 +21,7 @@ from R10_sensor import (fetch_stock_fin_reports_from_tquant,
                         fetch_stock_news_cn_from_jd,
                         fetch_stocklist_hkus_from_futuquant,
                         fetch_stock_category_from_futuquant,
-                        fetch_stock_index_stocks_from_futuqunat,
+                        fetch_stock_index_stocks_from_futuquant,
                         )
 
 import R50_general.general_helper_funcs as gcf
@@ -58,99 +58,99 @@ if __name__ == '__main__':
 
     try:
         # step 10.1: update stock list
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stocklist_from_Tquant)
+        program_name = fetch_stocklist_from_Tquant.global_module_name
         ahf.func_call_as_job_with_trace(fetch_stocklist_from_Tquant.fetch2DB,
                                         program_name = program_name,processed_set=processed_set)
         append_processed_prog_log(program_name)
 
         # step 10.2: update stock list of HK and US
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stocklist_hkus_from_futuquant)
+        program_name = fetch_stocklist_hkus_from_futuquant.global_module_name
         ahf.func_call_as_job_with_trace(fetch_stocklist_hkus_from_futuquant.fetch2DB,
                                         program_name = program_name,processed_set=processed_set)
         append_processed_prog_log(program_name)
 
         # step 20.1: update stock daily bar current info from sina 股票每日交易数据
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stock_current_dailybar_from_sina)
+        program_name = fetch_stock_current_dailybar_from_sina.global_module_name
         ahf.func_call_as_job_with_trace(fetch_stock_current_dailybar_from_sina.auto_reprocess,
                                         program_name = program_name, processed_set=processed_set)
         append_processed_prog_log(program_name)
 
         # step 20.2: get stock dailybar 股票每日蜡烛图数据
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stock_dailybar_from_tquant)
+        program_name = fetch_stock_dailybar_from_tquant.global_module_name
         ahf.func_call_as_job_with_trace(fetch_stock_dailybar_from_tquant.auto_reprocess,
                                  program_name = program_name,processed_set=processed_set)
         append_processed_prog_log(program_name)
 
         # step 20.3: get stock dailybar 股票每日蜡烛图数据 网易
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stock_dailybar_from_netease)
+        program_name = fetch_stock_dailybar_from_netease.global_module_name
         ahf.func_call_as_job_with_trace(fetch_stock_dailybar_from_netease.auto_reprocess,
                                  program_name = program_name,processed_set=processed_set)
         append_processed_prog_log(program_name)
 
         # step21.1: get index stocks from futuquant
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stock_index_stocks_from_futuqunat)
-        ahf.func_call_as_job_with_trace(fetch_stock_index_stocks_from_futuqunat.fetch2DB,
-                                 program_name = program_name,processed_set=processed_set)
+        program_name = fetch_stock_index_stocks_from_futuquant.global_module_name
+        ahf.func_call_as_job_with_trace(fetch_stock_index_stocks_from_futuquant.fetch2DB,
+                                        program_name = program_name, processed_set=processed_set)
         append_processed_prog_log(program_name)
 
         # step21.2: get category info from futuquant
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stock_category_from_futuquant)
+        program_name = fetch_stock_category_from_futuquant.global_module_name
         ahf.func_call_as_job_with_trace(fetch_stock_category_from_futuquant.fetch2DB,
                                  program_name = program_name,processed_set=processed_set)
         append_processed_prog_log(program_name)
 
 
         # step 22: update stock company general info, 股本信息.
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stock_company_general_info_from_eastmoney)
+        program_name = fetch_stock_company_general_info_from_eastmoney.global_module_name
         ahf.func_call_as_job_with_trace(fetch_stock_company_general_info_from_eastmoney.auto_reprocess,
                                         program_name = program_name,processed_set=processed_set)
         append_processed_prog_log(program_name)
 
         # step 25: get news list from jd
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stock_news_cn_from_jd)
+        program_name = fetch_stock_news_cn_from_jd.global_module_name
         ahf.func_call_as_job_with_trace(fetch_stock_news_cn_from_jd.fetch2DB,
                                  program_name = program_name,processed_set=processed_set)
         append_processed_prog_log(program_name)
 
         # step 30: update eastmoney core concept
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stock_core_concept_from_eastmoney)
+        program_name = fetch_stock_core_concept_from_eastmoney.global_module_name
         ahf.func_call_as_job_with_trace(fetch_stock_core_concept_from_eastmoney.auto_reprocess,
                                  program_name = program_name,processed_set=processed_set)
         append_processed_prog_log(program_name)
 
         # step 40: update 3 fin reports
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stock_fin_reports_from_tquant)
+        program_name = fetch_stock_fin_reports_from_tquant.global_module_name
         ahf.func_call_as_job_with_trace(fetch_stock_fin_reports_from_tquant.auto_reprocess,
                                         program_name = program_name,processed_set=processed_set)
         append_processed_prog_log(program_name)
 
         # step 50: update stock changes hist record, especially name
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stock_change_record_from_qq)
+        program_name = fetch_stock_change_record_from_qq.global_module_name
         ahf.func_call_as_job_with_trace(fetch_stock_change_record_from_qq.auto_reprocess,
                                  program_name = program_name,processed_set=processed_set)
         append_processed_prog_log(program_name)
 
         # step 60: update stock shareholders info, 股东信息.
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stock_shareholder_from_eastmoney)
+        program_name = fetch_stock_shareholder_from_eastmoney.global_module_name
         ahf.func_call_as_job_with_trace(fetch_stock_shareholder_from_eastmoney.auto_reprocess,
                                  program_name = program_name,processed_set=processed_set)
         append_processed_prog_log(program_name)
 
         # step 80: get stock divident 分红送转信息
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stock_dividend_from_cninfo)
+        program_name = fetch_stock_dividend_from_cninfo.global_module_name
         ahf.func_call_as_job_with_trace(fetch_stock_dividend_from_cninfo.auto_reprocess,
                                  program_name = program_name,processed_set=processed_set)
         append_processed_prog_log(program_name)
 
         # step 90: update qq category info
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stock_category_and_daily_status_from_qq)
+        program_name = fetch_stock_category_and_daily_status_from_qq.global_module_name
         ahf.func_call_as_job_with_trace(fetch_stock_category_and_daily_status_from_qq.fetch2DB,
                                  program_name = program_name,processed_set=processed_set)
         append_processed_prog_log(program_name)
 
 
         # step 900: update stock structure info, 股本信息.
-        program_name = gcf.get_cur_file_name_by_module_name(fetch_stock_structure_hist_from_sina)
+        program_name = fetch_stock_structure_hist_from_sina.global_module_name
         ahf.func_call_as_job_with_trace(fetch_stock_structure_hist_from_sina.auto_reprocess,
                                         program_name = program_name,processed_set=processed_set)
         append_processed_prog_log(program_name)

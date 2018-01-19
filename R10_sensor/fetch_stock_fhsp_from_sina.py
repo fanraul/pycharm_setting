@@ -1,3 +1,6 @@
+
+# TODO: This program is in-process, no finished,can't use!!
+
 import pandas as pd
 from pandas import Series, DataFrame
 import numpy as np
@@ -12,6 +15,8 @@ import R50_general.general_constants
 import R50_general.general_helper_funcs as gcf
 from R50_general.general_helper_funcs import logprint
 import R50_general.dfm_to_table_common as df2db
+
+global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 
 def fetch2DB(stockid:str = ''):
 

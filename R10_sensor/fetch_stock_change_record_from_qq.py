@@ -22,6 +22,7 @@ it extract below 3 types datas
 -change hist, especially name change log
 -stock category info (obsolete,data source quality not good!!)
 """
+global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 
 mode = 'update_log'
 
@@ -41,7 +42,7 @@ def fetch2DB(stockid:str = ''):
     dict_misc_pars['char_origin'] = 'QQ'
     dict_misc_pars['char_freq'] = "D"
     dict_misc_pars['allow_multiple'] ='N'
-    dict_misc_pars['created_by'] = dict_misc_pars['update_by'] ='fetch_stock_change_record_from_qq'
+    dict_misc_pars['created_by'] = dict_misc_pars['update_by'] =global_module_name
     dict_misc_pars['char_usage'] = 'NAME_HIST'
 
     #get chars for stock category
@@ -50,7 +51,7 @@ def fetch2DB(stockid:str = ''):
     dict_misc_pars_catg['char_origin'] = 'QQ'
     dict_misc_pars_catg['char_freq'] = "D"
     dict_misc_pars_catg['allow_multiple'] ='Y'
-    dict_misc_pars_catg['created_by'] = dict_misc_pars_catg['update_by'] ='fetch_stock_change_record_from_qq'
+    dict_misc_pars_catg['created_by'] = dict_misc_pars_catg['update_by'] =global_module_name
     dict_misc_pars_catg['char_usage'] = 'CATG'
 
     # check whether db table is created.
@@ -159,7 +160,7 @@ def soup_parse_change_hist(soup:BeautifulSoup):
     return DataFrame(ls_changes)
 
 def auto_reprocess():
-    ahf.auto_reprocess_dueto_ipblock(identifier='fetch_stock_change_record_from_qq',
+    ahf.auto_reprocess_dueto_ipblock(identifier=global_module_name,
                                                                  func_to_call=fetch2DB,
                                                                  wait_seconds=300)
 

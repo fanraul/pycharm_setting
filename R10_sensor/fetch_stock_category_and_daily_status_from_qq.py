@@ -16,6 +16,7 @@ from R50_general.general_helper_funcs import logprint
 import R50_general.dfm_to_table_common as df2db
 
 timestamp = datetime.now()
+global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 
 # TODO: current only handle China market category, will parse other market in future
 def fetch2DB():
@@ -98,7 +99,7 @@ def fetch2DB():
     dict_misc_pars_catg['char_origin'] = 'QQ'
     dict_misc_pars_catg['char_freq'] = "D"
     dict_misc_pars_catg['allow_multiple'] ='Y'
-    dict_misc_pars_catg['created_by'] = dict_misc_pars_catg['update_by'] ='fetch_stock_category_and_daily_status_from_qq'
+    dict_misc_pars_catg['created_by'] = dict_misc_pars_catg['update_by'] = global_module_name
     dict_misc_pars_catg['char_usage'] = 'CATG'
     dict_cols_cur_catg = {'Catg_Type': 'nvarchar(50)','Catg_Name':'nvarchar(50)'}
     df2db.add_new_chars_and_cols(dict_cols_cur_catg, list(dfm_db_chars_catg['Char_ID']), table_name_concept,
@@ -136,7 +137,7 @@ def fetch2DB():
     dict_misc_pars_catgtrans['char_origin'] = 'QQ'
     dict_misc_pars_catgtrans['char_freq'] = "D"
     dict_misc_pars_catgtrans['allow_multiple'] ='N'
-    dict_misc_pars_catgtrans['created_by'] = dict_misc_pars_catgtrans['update_by'] ='fetch_stock_category_and_daily_status_from_qq'
+    dict_misc_pars_catgtrans['created_by'] = dict_misc_pars_catgtrans['update_by'] = global_module_name
     dict_misc_pars_catgtrans['char_usage'] = 'CATG_TRANS'
     dict_cols_cur_catgtrans = {'上涨家数': 'int',
                                '平盘家数':'int',
@@ -220,7 +221,7 @@ def parse_concept(ls_catgs:list):
             dt_line['Catg_Name'] = ls_item[1].strip()
             dt_line['Catg_Reference'] = ls_item[0].strip()
             dt_line['Created_datetime'] = timestamp
-            dt_line['Created_by'] = 'fetch_stock_category_and_daily_status_from_qq'
+            dt_line['Created_by'] = global_module_name
             ls_dfm_catg.append(dt_line)
 
             dt_catg_daily_trans ={}

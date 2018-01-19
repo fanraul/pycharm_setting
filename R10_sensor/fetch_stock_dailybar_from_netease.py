@@ -10,10 +10,9 @@ import R50_general.general_helper_funcs as gcf
 import R50_general.dfm_to_table_common as df2db
 import R50_general.advanced_helper_funcs as ahf
 
-
-import tquant.myquant as mt
-
 global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
+
+
 last_trading_datetime = gcf.get_last_trading_daytime()
 last_trading_date = last_trading_datetime.date()
 last_fetch_date = df2db.get_last_fetch_date(global_module_name, format='date')
