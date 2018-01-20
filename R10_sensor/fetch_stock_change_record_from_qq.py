@@ -140,7 +140,6 @@ def soup_parse_catg(soup):
 
 def soup_parse_change_hist(soup:BeautifulSoup):
     body_content = soup.find_all('table',class_= 'list')
-    # print (body_content[0])
     stock_changes = body_content[1].find_all('tr')
     # print(stock_profile[0].td)
     # print(stock_profile[1].contents)

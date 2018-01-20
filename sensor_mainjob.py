@@ -125,10 +125,11 @@ if __name__ == '__main__':
         append_processed_prog_log(program_name)
 
         # step 50: update stock changes hist record, especially name
-        program_name = fetch_stock_change_record_from_qq.global_module_name
-        ahf.func_call_as_job_with_trace(fetch_stock_change_record_from_qq.auto_reprocess,
-                                 program_name = program_name,processed_set=processed_set)
-        append_processed_prog_log(program_name)
+        # TODO: link doesn't work now!!
+        # program_name = fetch_stock_change_record_from_qq.global_module_name
+        # ahf.func_call_as_job_with_trace(fetch_stock_change_record_from_qq.auto_reprocess,
+        #                          program_name = program_name,processed_set=processed_set)
+        # append_processed_prog_log(program_name)
 
         # step 60: update stock shareholders info, 股东信息.
         program_name = fetch_stock_shareholder_from_eastmoney.global_module_name

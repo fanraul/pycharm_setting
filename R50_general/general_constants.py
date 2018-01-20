@@ -241,7 +241,7 @@ scheduleman = {
           'rule': 'W',
           'weekdays': [0, 1, 2, 3, 4, 6]  # everyday except Saturday
     },
-    'fetch_stock_index_stocks_from_futuqunat': {
+    'fetch_stock_index_stocks_from_futuquant': {
           'rule': 'W',
           'weekdays': [0, 1, 2, 3, 4, 6]  # everyday except Saturday
     },
