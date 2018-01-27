@@ -180,6 +180,8 @@ CREATE TABLE [%(table)s](
 
 # the job sheduler for background programs
 # key is the program name
+# Notes: no more job set at Saturday, set them at Friday if required
+#        merge Saturday into Friday from 2018/1/27
 scheduleman = {
     'fetch_stock_fin_reports_from_tquant':{
         'rule':'W',
@@ -215,7 +217,7 @@ scheduleman = {
     },
     'fetch_stock_dailybar_from_tquant':{
         'rule': 'W',
-        'weekdays': [5, ]  # Saturday
+        'weekdays': [4, ]  # Friday
     },
     'fetch_stock_dailybar_from_netease': {
         'rule': 'W',
@@ -231,7 +233,7 @@ scheduleman = {
     },
     'fetch_stock_news_cn_from_jd':{
         'rule': 'W',
-        'weekdays':[0,1,2,3,4,5,6]  #everyday
+        'weekdays':[0,1,2,3,4,6]  #everyday except Saturday
     },
     'fetch_stocklist_hkus_from_futuquant':{
         'rule': 'W',

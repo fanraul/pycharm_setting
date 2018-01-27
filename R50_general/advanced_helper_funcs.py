@@ -18,7 +18,11 @@ def getweekday():
 
     # overwrite weekday as certain date for re-processing only***********************
     # for example, reprocess at Saturday and assume it it Friday.
-    # weekday = 4
+    # temp rule defined at 2018/1/27
+    # rule: too much program dump at Friday, so treat Friday and Saturday as Friday,
+    # so that reprocess can easily achieved at Saturday
+    if weekday == 5:
+        weekday = 4   # set Saturday as Friday
     #********************************************************************************
     return weekday
 
