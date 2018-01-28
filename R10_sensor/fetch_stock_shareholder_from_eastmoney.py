@@ -307,6 +307,8 @@ def json_parse_stock_sh40(json_stock_sh:str):
 
     if dt_json_stksh:
         ls_sdgdcgbd = dt_json_stksh['sdgdcgbd']
+        if ls_sdgdcgbd == None:
+            return DataFrame()
         for item in ls_sdgdcgbd:
             item = {x:y.strip() if y != '--' and y else None for (x,y) in item.items()}
             dt_sh10 = {}
