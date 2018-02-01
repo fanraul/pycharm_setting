@@ -16,7 +16,7 @@ import tquant.getdata as gt
 global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 
 """
-this report use tquant module2's get_financial func to get balance report and store them into sql server
+this report use tquant module's get_financial func to get balance report and store them into sql server
 get_financial func return 3 dataframe, the first one is balance sheet, the second is profit, and the
 third is cash flow.
 
