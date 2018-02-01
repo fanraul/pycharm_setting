@@ -20,8 +20,8 @@ def fetch2DB(stockid:str):
                   now I use 3rd mode mainly.
     auto-reprocess mode: call this funcion one by one for all stockid,it is used in dry-run and real job model.
 
-    in this case, it is better get last trading date at module level instead of function level. so move last trading date
-    ,last_fetch_date at module level.
+    in this case, it is better get last trading date at module2 level instead of function level. so move last trading date
+    ,last_fetch_date at module2 level.
     :param stockid:
     :return:
     '''

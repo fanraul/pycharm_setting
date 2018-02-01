@@ -1,0 +1,13 @@
+# Stage1 Target
+Build basic analysis functions in CN stock market based on:
++ stock K line data
++ stock volume data
++ stock holder data
++ category data
++ stock basic info
++ 
+
+## Data source
++
+## func
+## evaluator

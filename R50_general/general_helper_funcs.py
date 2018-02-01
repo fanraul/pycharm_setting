@@ -521,7 +521,7 @@ def get_plate_stocks_futuquant(ip, port, strcode):
 
 def get_cur_file_name_by_module_name(name):
     """
-    use module's __name__ to get the file name without .py
+    use module2's __name__ to get the file name without .py
     :param name:
     :return:
     """
@@ -531,7 +531,7 @@ def get_cur_file_name_by_module_name(name):
         str_filename = sys.argv[0].split('/')[-1]
         return str_filename.split('.')[0]
     else:
-        # it is run as a module, get file name from module's varable __name__
+        # it is run as a module2, get file name from module2's varable __name__
         return name.split('.')[-1]
 
 def get_stock_current_trading_info_sina(mktstks,return_format,batch_size = 40):
