@@ -27,13 +27,3 @@ fetch_stock_news_cn_from_jd|
 ### stock id  as key
 ### obj other than stock id + transdate as key
 ### obj other than stock id as key
-
-| Command | Description |
-| --- | --- |
-| git status | List all new or modified files |
-| git diff | Show file differences that haven't been staged |
-
-Command|Description
----|---
-git status|List all new or modified files
-git diff|Show file differences that haven't been staged
