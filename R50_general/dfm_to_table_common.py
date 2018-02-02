@@ -23,7 +23,7 @@ def get_cn_stocklist(stock :str ="", ls_excluded_stockids=[]) -> DataFrame:
                                             Market_ID + Stock_ID as MktStk_ID,
                                             Tquant_Market_ID,
                                             上市日期
-                                            from BD1_stocklist_with_general_info 
+                                            from BD_L1_00_cn_stock_code_list 
                                             where ((Market_ID = 'SH' and Stock_ID like '6%') 
                                             or (Market_ID = 'SZ' and (Stock_ID like '0%' or Stock_ID like '3%' )))
                                             and sec_type = '1' '''
@@ -40,7 +40,7 @@ def get_cn_stocklist(stock :str ="", ls_excluded_stockids=[]) -> DataFrame:
                                             Market_ID + Stock_ID as MktStk_ID,
                                             Tquant_Market_ID,
                                             上市日期                                             
-                                            from BD1_stocklist_with_general_info
+                                            from BD_L1_00_cn_stock_code_list
                                                 where  (Market_ID = 'SH' or Market_ID = 'SZ')  
                                                 and sec_type = '1'
                                                     ''' + "and Stock_ID = '%s'" %stock
