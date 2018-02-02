@@ -10,7 +10,7 @@ from R50_general.general_helper_funcs import logprint
 import tquant.getdata as gt
 
 """
-this report use tquant module's get_financial func to get 3 fin report and store them into sql server
+this report use tquant module2's get_financial func to get 3 fin report and store them into sql server
 get_financial func return 3 dataframe, the first one is balance sheet, the second is profit, and the
 third is cash flow.
 

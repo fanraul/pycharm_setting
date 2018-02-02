@@ -1,10 +1,10 @@
 from sqlalchemy import create_engine
-import socket
+# import socket
 # remote database
 # DB_connection_string = 'mssql+pyodbc://Richmind:121357468@Richmind_Remote'
 # local database
 
-hostname = socket.gethostname()
+# hostname = socket.gethostname()
 DB_connection_string = 'mssql+pyodbc://Richmind:121357468@Richmind'
 
 class Dbconnectionmanager:
