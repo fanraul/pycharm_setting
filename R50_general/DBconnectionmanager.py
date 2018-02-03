@@ -1,13 +1,14 @@
 from sqlalchemy import create_engine
+from R50_general.general_constants import ls_hostname_DEV,ls_hostname_PRD
 import socket
 # remote database
 # DB_connection_string = 'mssql+pyodbc://Richmind:121357468@Richmind_Remote'
 # local database
 
 hostname = socket.gethostname()
-if hostname in ('BELLA-MACBUKAIR'):
+if hostname in ls_hostname_DEV:
     DB_connection_string = 'mssql+pyodbc://Richmind:121357468@Richmind'
-elif hostname in ('iZgaizjy01f4atZ'):
+elif hostname in ls_hostname_PRD:
     DB_connection_string = 'mssql+pyodbc://Richmind:121357468@Richmind_PRD'
 else:
     assert 0==1,'please update the hostname to decide which SQL server to link!'
