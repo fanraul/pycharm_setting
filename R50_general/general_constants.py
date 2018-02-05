@@ -16,9 +16,10 @@ hostname = socket.gethostname()
 if hostname in ls_hostname_DEV:
     Global_path_news_details_jd = 'C:\\80_Business_docs\\news\\jd\\'
 elif hostname in ls_hostname_PRD:
-    DB_connection_string = 'D:\\80_Business_docs\\news\\jd\\'
+    Global_path_news_details_jd = 'D:\\80_Business_docs\\news\\jd\\'
 else:
     assert 0==1,'please update the hostname to decide which folder business docs to store!'
+
 
 weblinks = {
     'stock_list_easymoney': 'http://quote.eastmoney.com/stocklist.html',   # obselete
