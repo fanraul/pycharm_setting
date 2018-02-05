@@ -15,4 +15,5 @@ import R50_general.general_helper_funcs as gcf
 
 
 view_name = 'BD_L2_00_cn_stocklist_with_general_info_now'
+
 df2db.get_data_from_DB(view_name).to_excel('views.xls')

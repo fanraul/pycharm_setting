@@ -377,8 +377,8 @@ def send_email(receiver, title, content, attachments):
     From = "fanraul@163.com"
     To = receiver
     # server = smtplib.SMTP("smtp.163.com")
-    server = smtplib.SMTP_SSL("smtp.163.com")
-    server.login("fanraul@163.com", "121357468@")  # 仅smtp服务器需要验证时
+    server = smtplib.SMTP_SSL(gc.email_smtp_server)
+    server.login(gc.email_user_account, gc.email_user_pwd)  # 仅smtp服务器需要验证时
 
     # 构造MIMEMultipart对象做为根容器
     main_msg = multipart.MIMEMultipart()
@@ -711,13 +711,14 @@ if __name__ == "__main__":
     # func_call_with_trace(print_list_nice, [(1,2)]*1000000)
 
     # 8.test for send_email
-    # send_email('terry.fan@sparkleconsulting.com;fanraul@icloud.com', 'email test',
-    #            'this is a test for email attachement',
-    #            ['C:/00_RichMinds/Github/RichMinds/sensor_mainjob.py','C:/00_RichMinds/Github/RichMinds/README.md'])
+    send_email('terry.fan@sparkleconsulting.com;fanraul@icloud.com', 'email test',
+               'this is a test for email attachement',
+               ['C:/00_RichMinds/Github/RichMinds/sensor_mainjob.py','C:/00_RichMinds/Github/RichMinds/README.md'])
 
     # print(isStrNumber('123.3'))
     # print(isStrNumber('123.3.4'))
     # get_stock_current_trading_info_sina(['sz300712','sz300619'],return_format=1)
 
-    import R10_sensor.fetch_stock_category_from_futuquant
-    print(R10_sensor.fetch_stock_category_from_futuquant.global_module_name)
+    # test module name get function
+    # import R10_sensor.fetch_stock_category_from_futuquant
+    # print(R10_sensor.fetch_stock_category_from_futuquant.global_module_name)

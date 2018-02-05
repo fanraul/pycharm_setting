@@ -265,3 +265,8 @@ scheduleman = {
 # the date which shouldn't run the job
 excluded_dates =['2018-1-1',
                  '2019-1-1']
+
+
+email_smtp_server = "smtp.163.com"
+email_user_account = "fanraul@163.com"
+email_user_pwd = "net121"
