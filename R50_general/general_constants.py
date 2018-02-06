@@ -205,14 +205,6 @@ scheduleman = {
         'rule': 'W',
         'weekdays': [0, 1, 2, 3, 4]  # monday to Friday
     },
-    'fetch_stock_category_and_daily_status_from_qq':{
-        'rule': 'W',
-        'weekdays': [0, 1, 2, 3, 4, 6]  # monday to Friday and Sunday
-    },
-    'fetch_stock_change_record_from_qq':{
-        'rule': 'W',
-        'weekdays': [4]  # Friday
-    },
     'fetch_stock_core_concept_from_eastmoney':{
         'rule': 'W',
         'weekdays': [1, 3]  # Tuesday, Thursday
@@ -262,6 +254,15 @@ scheduleman = {
     'fetch_stock_index_stocks_from_futuquant': {
           'rule': 'W',
           'weekdays': [0, 1, 2, 3, 4, 6]  # everyday except Saturday
+    },
+    'fetch_stock_change_record_from_qq': {
+        'rule': 'W',
+        'weekdays': []  # not scheduled any more due to web link doesn't work
+    },
+    'fetch_stock_category_and_daily_status_from_qq': {
+        'rule': 'W',
+        'weekdays': []
+    # not scheduled any more due to poor performance(web block by qq) and poor data quality(don't use qq as data source)
     },
 }
 
