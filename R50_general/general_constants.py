@@ -226,7 +226,9 @@ scheduleman = {
     },
     'fetch_stock_company_general_info_from_eastmoney':{
         'rule': 'W',
-        'weekdays': [4,]  # Friday
+        # due to program fetch_stock_change_record_from_qq doesn't work any more, this program can get the name changes as well
+        # so make this program run every business day
+        'weekdays': [0,1,2,3,4,6]  # monday to Friday, Sunday
     },
     'fetch_stock_dailybar_from_tquant':{
         'rule': 'W',
