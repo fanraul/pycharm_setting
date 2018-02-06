@@ -14,12 +14,13 @@ from R50_general.general_helper_funcs import logprint
 import R50_general.dfm_to_table_common as df2db
 
 """
+THIS PROGRAM IS OBSELETE DUE TO WEB LINK DOESN'T WORK ANY MORE!!!
 this program parse the stock basic info page from qq :
 http://stock.finance.qq.com/corp1/profile.php?zqdm=%(stock_id)s
 
 
-it extract below 3 types datas 
--change hist, especially name change log
+it extract below datas 
+-change hist, name change log
 -stock category info (obsolete,data source quality not good!!)
 """
 global_module_name = gcf.get_cur_file_name_by_module_name(__name__)

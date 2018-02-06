@@ -120,5 +120,8 @@ def fetch2DB():
         except:
             raise
 
+    import R10_sensor.fetch_stock_name_changes_from_Tquant as fetch_stock_name_changes_from_Tquant
+    fetch_stock_name_changes_from_Tquant.update_stock_name_changes()
+
 if __name__ =='__main__':
     fetch2DB()

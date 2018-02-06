@@ -44,6 +44,7 @@ weblinks = {
 dbtables = {
     'finpreports_Tquant' :['DD_stock_fin_balance_tquant', 'DD_stock_fin_profit_tquant','DD_stock_fin_cashflow_tquant'],
     'name_hist_qq': 'DD_stock_name_change_hist_qq',
+    'name_hist_Tquant' : 'DD_stock_name_change_hist_Tquant',
     'stock_category_relation_qq':'DD_stock_category_assignment_qq',
     'category_daily_trans_qq': 'DD_category_daily_noauth_qq',
     'stock_structure_sina':'DD_stock_structure_sina',

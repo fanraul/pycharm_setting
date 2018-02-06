@@ -228,6 +228,7 @@ def dfmprint(*args, sep=' ',  end='\n',  file=None):
     pd.set_option('display.max_rows', None)
     pd.set_option('display.max_columns', None)
     pd.set_option('display.width', None)
+    pd.set_option('display.max_colwidth',255)
     print(*args, sep=' ',  end='\n',  file=None)
 
 def isStrNumber(s:str):

@@ -64,6 +64,42 @@ def get_all_stocklist(stock :str ="") -> DataFrame:
                                        , conn)
     return dfm_stocks
 
+def get_lastest_snapshot_from_mtkstk_hist_table(table_name):
+    """
+    this func call store procedure 'CFM_get_lastest_snapshot_from_mtkstk_hist_table' to get the lastest records (eg.
+    one stock id has multiple lines, only the latest lines are return).
+    :param table_name: the table name to fetch
+    :return: dfm of the latest data
+    """
+    params = {'table_name':table_name}
+
+    return exec_store_procedure(conn,'CFM_get_lastest_snapshot_from_mtkstk_hist_table',params)
+
+def exec_store_procedure(conn, proc_name, params):
+    """
+    general function to call a store procedure
+    :param conn: connection
+    :param proc_name: procedure name
+    :param params: a dictionary to hold the parameters
+    :return: dataframe of result dataset
+
+    """
+    # solution1: this one not good, no column name returned, only the result dataset return
+    # return a list of tuple, each tuple represent a db record.
+    # sql_params = ",".join(["@{0}={1}".format(name, value) for name, value in params.items()])
+    # sql_string = """
+    #     DECLARE @return_value int;
+    #     EXEC    @return_value = [dbo].[{proc_name}] {params};
+    #     SELECT 'Return Value' = @return_value;
+    # """.format(proc_name=proc_name, params=sql_params)
+    # return conn.execute(sql_string).fetchall()
+
+    # solution2: use pandas read_sql_query, return a dataframe with column name
+    sql_params = ",".join(["@{0}={1}".format(name, value) for name, value in params.items()])
+    query = 'EXEC {proc_name} {params}'.format(proc_name=proc_name, params=sql_params)
+    dfm_resultset = pd.read_sql_query(query, conn)
+    # gcf.dfmprint(df)
+    return dfm_resultset
 
 def get_data_from_DB(table_name, dfm_conditions=DataFrame(), oper_dfm = 'AND', free_conditions :str ="") -> DataFrame:
     """
@@ -1126,6 +1162,9 @@ if __name__ == "__main__":
     # [Market_ID],[Update_time]) VALUES (?,?,?,?,?,?,?,?)', ('北京中天信会计师事务所', '四川华信(集团)会计师事务所',
     # '2002-01-12 00:00:00', None, '境内会计师事务所', '000155', 'SZ', '2017-09-12 21:13:12'))
 
-    dfmtest = get_cn_stocklist('',ls_excluded_stockids=['000001','600000','000002'])
-    gcf.dfmprint(dfmtest)
-    pass
+    # dfmtest = get_cn_stocklist('',ls_excluded_stockids=['000001','600000','000002'])
+    # gcf.dfmprint(dfmtest)
+    # pass
+
+    # print(exec_store_procedure(conn,'CFM_get_lastest_snapshot_from_mtkstk_hist_table',{'table_name': 'DD_stock_name_change_hist_qq'}))
+    gcf.dfmprint(get_lastest_snapshot_from_mtkstk_hist_table('DD_stock_name_change_hist_Tquant'))
