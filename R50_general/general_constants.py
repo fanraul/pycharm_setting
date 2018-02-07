@@ -3,22 +3,29 @@ import socket
 # the earliset dailybar date time, in dev, it's currently it is 2014-1-1.
 Global_dailybar_begin_date = datetime(2017,1,1).date()
 
-# futu api global ip and port
-futu_api_ip = '127.0.0.1'  # ''119.29.141.202'
-futu_api_port = 11111
-
+hostname = socket.gethostname()
 ls_hostname_PRD = ['iZgaizjy01f4atZ',]
 ls_hostname_DEV = ['BELLA-MACBUKAIR',]
 
-Global_Job_Log_Base_Direction = 'C:/00_RichMinds/log/'
-
-hostname = socket.gethostname()
 if hostname in ls_hostname_DEV:
-    Global_path_news_details_jd = 'C:\\80_Business_docs\\news\\jd\\'
+    host_type = 'DEV'
 elif hostname in ls_hostname_PRD:
+    host_type = 'PRD'
+else:
+    assert 0==1,'please update the hostname into DEV list or PRD list'
+
+if host_type == 'DEV':
+    futu_api_ip = '101.132.98.4' # futu api global ip and port
+    Global_path_news_details_jd = 'C:\\80_Business_docs\\news\\jd\\'
+elif host_type == 'PRD':
+    futu_api_ip = '127.0.0.1'
     Global_path_news_details_jd = 'D:\\80_Business_docs\\news\\jd\\'
 else:
-    assert 0==1,'please update the hostname to decide which folder business docs to store!'
+    assert 0==1,'unknown host type'
+
+futu_api_port = 11111
+
+Global_Job_Log_Base_Direction = 'C:/00_RichMinds/log/'
 
 
 weblinks = {

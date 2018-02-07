@@ -5,6 +5,7 @@ import numpy as np
 from bs4 import BeautifulSoup
 import urllib.request
 import re
+import time
 
 from datetime import datetime
 
@@ -120,6 +121,8 @@ def fetch2DB():
         except:
             raise
 
+    logprint('wait for 10 seconds and start fetch stock name changes program')
+    time.sleep(10)
     import R10_sensor.fetch_stock_name_changes_from_Tquant as fetch_stock_name_changes_from_Tquant
     fetch_stock_name_changes_from_Tquant.update_stock_name_changes()
 
