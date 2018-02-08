@@ -438,7 +438,7 @@ def send_email(receiver, title, content, attachments):
         server.quit()
 
 def send_daily_job_log(content:str,flg_except:bool = False):
-    receiver = 'terry.fan@sparkleconsulting.com;fanraul@icloud.com'
+    receiver = gc.Global_email_receiver
     if not flg_except:
         title = '%s job log %s' %(log_job_name,datetime.now().date())
     else:
@@ -714,7 +714,9 @@ if __name__ == "__main__":
     # 8.test for send_email
     send_email('terry.fan@sparkleconsulting.com;fanraul@icloud.com', 'email test',
                'this is a test for email attachement',
-               ['C:/00_RichMinds/Github/RichMinds/sensor_mainjob.py','C:/00_RichMinds/Github/RichMinds/README.md'])
+               []
+               # ['C:/00_RichMinds/Github/RichMinds/sensor_mainjob.py','C:/00_RichMinds/Github/RichMinds/README.md']
+               )
 
     # print(isStrNumber('123.3'))
     # print(isStrNumber('123.3.4'))

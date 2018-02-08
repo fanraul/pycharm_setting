@@ -27,6 +27,7 @@ futu_api_port = 11111
 
 Global_Job_Log_Base_Direction = 'C:/00_RichMinds/log/'
 
+Global_email_receiver = 'terry.fan@sparkleconsulting.com;fanraul@icloud.com'
 
 weblinks = {
     'stock_list_easymoney': 'http://quote.eastmoney.com/stocklist.html',   # obselete

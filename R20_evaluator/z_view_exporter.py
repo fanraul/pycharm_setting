@@ -15,5 +15,7 @@ import R50_general.general_helper_funcs as gcf
 
 
 view_name = 'BD_L2_00_cn_stocklist_with_general_info_now'
+view_name = 'DD_stock_index_stocks_futuquant'
+view_name = 'DD_stocklist_hkus_futuquant'
 
-df2db.get_data_from_DB(view_name).to_excel('views.xls')
+df2db.get_data_from_DB(view_name).to_excel('views2.xlsx')

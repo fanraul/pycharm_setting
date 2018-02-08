@@ -1,4 +1,15 @@
+## 2018-2-8
+1. 另外设置一个job,在每天的闲时,对所有列**idx_exclusion_flg**标识为X的IDX进行查询,如果该IDX能找到所含的stocklist,则更新数据库并发邮件给我,然后我手工重置这个flg.
+2. dialy job排除部分无stock的idx的查询操作上线
+
+
 ## 2018-2-7
+1. 富途牛牛客户端在MAC电脑上的客户端无法使用,报错如下:
+     ![](https://i.imgur.com/uNdTVPa.png)
+2. 使用备选方案,链接阿里云上的富途牛牛客户端.已成功
+3. 在**DD_stocklist_hkus_futuquant**中手工增加一列**manualflg_no_stocks_under_idx**,该列仅用于IDX类型, 为X时,不执行IDX所含stock list的查询(某些IDX类型,futu牛牛客户端提供不了其股票清单,会报错Failed	to get stocks	under idx	HK.100000. Err message: ERROR. timed out when	receiving	after sending 90 bytes. For req: {"Protocol":	1027,	Version:	1, ReqParam: {"Market": 1, StockCode: 100000}},同时浪费大量执行时间.
+4. 手工更新列**manualflg_no_stocks_under_idx**,将无法取到数据的列进行排除.
+5. build a general program **zz_update_db_from_excel** which load data from excel and convert them into an excel which contains a list of *update SQL statement* , this program can be used for manual db table update scenario
 
 
 ## 2018-2-6
