@@ -1,6 +1,10 @@
 """
 得到一个指数下面所有的股票信息
 """
+# allow this program run as a job by itself.
+import sys
+sys.path.append(r"C:\00_RichMinds\Github\RichMinds")
+
 from futuquant.open_context import *
 from R50_general.general_constants import futu_api_ip as api_ip
 from R50_general.general_constants import futu_api_port as api_port
@@ -18,6 +22,7 @@ import R50_general.dfm_to_table_common as df2db
 import R50_general.advanced_helper_funcs as ahf
 import R50_general.general_constants
 import R50_general.general_helper_funcs as gcf
+
 
 global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 
@@ -92,3 +97,4 @@ if __name__ == "__main__":
     # print(get_index_stocks(api_ip, api_port, 'HK.800000'))
     mode_manualflg_no_stocks_under_idx = 2
     fetch2DB()
+
