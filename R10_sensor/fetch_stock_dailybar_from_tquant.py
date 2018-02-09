@@ -52,7 +52,7 @@ def fetch2DB(stockid:str):
 
     for index,row in dfm_stocks.iterrows():
         logprint('Processing stock %s' %row['Stock_ID'])
-        mt_stockid = row['Tquant_Market_ID'] + '.'+row['Stock_ID']
+        mt_stockid = row['Tquant_symbol_ID']
         if last_fetch_date:
             begin_time = last_fetch_date
         elif not row['上市日期']:
