@@ -11,7 +11,7 @@ import R50_general.dfm_to_table_common as df2db
 import R50_general.advanced_helper_funcs as ahf
 
 
-import tquant.myquant as mt
+import R90_tquant.myquant as mt
 
 global_module_name = gcf.get_cur_file_name_by_module_name(__name__)
 

@@ -1,7 +1,13 @@
-## 2018-2-8
-1. 另外设置一个job,在每天的闲时,对所有列**idx_exclusion_flg**标识为X的IDX进行查询,如果该IDX能找到所含的stocklist,则更新数据库并发邮件给我,然后我手工重置这个flg.
-2. dialy job排除部分无stock的idx的查询操作上线
+## 2018-2-9
+1. 修改**stock_basic_info**的列**Tquant_Market_ID**为**Tquant_symbol_ID**
+2. 富途牛牛客户端在MAC电脑上的客户端无法使用问题已解决,解决人是_富途研发_Hugh(384862429)_. 方法是把ApiDiscla.dat放到 %appdata%\FTNN\1.0\Common里面再重启即可.
 
+## 2018-2-8
+1. 另外设置一个job **Richmind_index_with_no_stock_assigned_retry**,在每天的闲时(凌晨4点),对所有列**idx_exclusion_flg**标识为X的IDX进行查询,如果该IDX能找到所含的stocklist,则更新数据库并发邮件给我,然后我手工重置这个flg.
+2. dialy job排除部分无stock的idx的查询操作上线
+3. 新建一个view:**BD_L1_10_cn_stock_name_changes_hist**,用于查询股票的历史名称.
+4. 今天开始处理stock K line数据
+5. 学习myquant和tquant的文档
 
 ## 2018-2-7
 1. 富途牛牛客户端在MAC电脑上的客户端无法使用,报错如下:

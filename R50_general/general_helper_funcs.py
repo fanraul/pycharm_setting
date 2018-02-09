@@ -21,7 +21,7 @@ from bs4 import BeautifulSoup
 from pandas import DataFrame
 from http.client import BadStatusLine
 
-import tquant.getdata as gt
+import R90_tquant.getdata as gt
 from R50_general import general_constants as gc
 
 from futuquant.open_context import *
@@ -229,6 +229,7 @@ def dfmprint(*args, sep=' ',  end='\n',  file=None):
     pd.set_option('display.max_columns', None)
     pd.set_option('display.width', None)
     pd.set_option('display.max_colwidth',255)
+    pd.set_option('display.precision',8)
     print(*args, sep=' ',  end='\n',  file=None)
 
 def isStrNumber(s:str):

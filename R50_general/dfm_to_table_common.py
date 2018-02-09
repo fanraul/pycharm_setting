@@ -21,7 +21,7 @@ def get_cn_stocklist(stock :str ="", ls_excluded_stockids=[]) -> DataFrame:
     if stock == "":
         dfm_stocks = pd.read_sql_query('''select Market_ID,Stock_ID,Stock_Name,is_active,
                                             Market_ID + Stock_ID as MktStk_ID,
-                                            Tquant_Market_ID,
+                                            Tquant_symbol_ID,
                                             上市日期
                                             from BD_L1_00_cn_stock_code_list 
                                             where ((Market_ID = 'SH' and Stock_ID like '6%') 
@@ -38,7 +38,7 @@ def get_cn_stocklist(stock :str ="", ls_excluded_stockids=[]) -> DataFrame:
     else:
         dfm_stocks = pd.read_sql_query('''select Market_ID,Stock_ID,Stock_Name,is_active,
                                             Market_ID + Stock_ID as MktStk_ID,
-                                            Tquant_Market_ID,
+                                            Tquant_symbol_ID,
                                             上市日期                                             
                                             from BD_L1_00_cn_stock_code_list
                                                 where  (Market_ID = 'SH' or Market_ID = 'SZ')  

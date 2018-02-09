@@ -11,8 +11,8 @@ from datetime import datetime
 
 from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
 from R50_general.general_helper_funcs import logprint
-import tquant.getdata as gt
-import tquant.myquant as mt
+import R90_tquant.getdata as gt
+import R90_tquant.myquant as mt
 import R50_general.dfm_to_table_common as df2db
 import R50_general.general_helper_funcs as gcf
 
@@ -37,7 +37,14 @@ def fetch2DB():
 #    print(dfm_db_stocks)
     dfm_db_stocks['symbol'] = dfm_db_stocks['Market_ID'] + dfm_db_stocks['Stock_ID']
 
-    dfm_stocklist = pd.concat([mt.get_shse(),mt.get_szse(),mt.get_dce(),mt.get_shfe(),mt.get_cffex(),mt.get_fund(),mt.get_index()])
+    dfm_stocklist = pd.concat([mt.get_shse(),
+                               mt.get_szse(),
+                               mt.get_dce(),
+                               mt.get_shfe(),
+                               mt.get_cffex(),
+                               mt.get_fund(),
+                               mt.get_index(),
+                               mt.get_etf(),])
 #    dfm_stocklist.to_excel('stocklist.xls')
 
     timestamp = datetime.now()
@@ -46,7 +53,7 @@ def fetch2DB():
     ls_upt_pars =[]
     for symbol in dfm_stocklist.index:
         market_id,stock_id = symbol.split('.')
-        tquant_market_id = market_id
+        tquant_symbol_id = symbol
         market_id = 'SH' if market_id == 'SHSE' else market_id
         market_id = 'SZ' if market_id == 'SZSE' else market_id
         if dfm_stocklist.loc[symbol]['is_active'] == 0 and dfm_stocklist.loc[symbol]['lower_limit']==0:
@@ -70,7 +77,7 @@ def fetch2DB():
                                 margin_ratio,
                                 multiplier,
                                 price_tick,
-                                tquant_market_id,
+                                tquant_symbol_id,
                                 lot_size,
                                 market_id,
                                 stock_id))
@@ -87,7 +94,7 @@ def fetch2DB():
                                 margin_ratio,
                                 multiplier,
                                 price_tick,
-                                tquant_market_id,
+                                tquant_symbol_id,
                                 lot_size))
             logprint("insert stock: %s.%s" %(market_id,stock_id))
 
@@ -102,7 +109,7 @@ def fetch2DB():
                                                ,[margin_ratio]
                                                ,[multiplier]
                                                ,[price_tick]
-                                               ,[Tquant_Market_ID]
+                                               ,[Tquant_symbol_ID]
                                                ,[lot_size])
                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?) """
         try:
@@ -113,7 +120,7 @@ def fetch2DB():
 
     if ls_upt_pars:
         upt_str = """UPDATE stock_basic_info SET Stock_Name = ?,sec_type=?,is_active=?,update_time=?,update_by =?,
-                     margin_ratio = ?,multiplier=?,price_tick=?,Tquant_Market_ID=? , lot_size = ? 
+                     margin_ratio = ?,multiplier=?,price_tick=?,Tquant_symbol_ID=? , lot_size = ? 
                      WHERE Market_ID = ? AND Stock_ID = ?"""
         try:
             conn.execute(upt_str,ls_upt_pars)

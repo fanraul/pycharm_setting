@@ -7,7 +7,7 @@ from datetime import datetime
 from R50_general.DBconnectionmanager import Dbconnectionmanager as dcm
 from R50_general.general_helper_funcs import logprint
 
-import tquant.getdata as gt
+import R90_tquant.getdata as gt
 
 """
 this report use tquant module2's get_financial func to get 3 fin report and store them into sql server
